@@ -1,7 +1,7 @@
 const core = require('gls-core-service');
 const BasicService = core.service.Basic;
 
-class Sms extends BasicService {
+class SmsGate extends BasicService {
     async start() {
         // TODO -
     }
@@ -11,4 +11,4 @@ class Sms extends BasicService {
     }
 }
 
-module.exports = Sms;
+module.exports = SmsGate;

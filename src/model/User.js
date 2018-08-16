@@ -55,6 +55,7 @@ module.exports = MongoDB.makeModel(
             // Cleaner for - ingoingSms, outgoingSms
             {
                 fields: {
+                    registrationStrategy: 1,
                     isPhoneVerified: 1,
                 },
             },
