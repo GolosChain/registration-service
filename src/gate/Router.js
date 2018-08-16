@@ -1,9 +1,14 @@
+const request = require('request-promise-native');
 const core = require('gls-core-service');
 const Gate = core.service.Gate;
+const errors = core.HttpError;
+const env = require('../env');
 const SocialStrategy = require('./registerStrategy/Social');
 const MailStrategy = require('./registerStrategy/Mail');
 const SmsToUser = require('./registerStrategy/SmsToUser');
 const SmsFromUser = require('./registerStrategy/SmsFromUser');
+
+const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
 
 class Router extends Gate {
     constructor(smsGate) {
@@ -30,7 +35,19 @@ class Router extends Gate {
     }
 
     async _checkCaptcha(captcha) {
-        // TODO -
+        const result = await request({
+            method: 'POST',
+            uri: GOOGLE_CAPTCHA_API,
+            json: true,
+            body: {
+                secret: env.GLS_GOOGLE_CAPTCHA_SECRET,
+                response: captcha,
+            },
+        });
+
+        if (result.success !== true) {
+            throw errors.E403.error;
+        }
     }
 
     async _callRegisterStrategy(data) {
