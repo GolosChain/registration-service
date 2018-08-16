@@ -3,6 +3,7 @@ const logger = core.Logger;
 const stats = core.Stats.client;
 const BasicService = core.service.Basic;
 const env = require('../env');
+const User = require('../model/User');
 
 class Cleaner extends BasicService {
     async start() {

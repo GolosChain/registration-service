@@ -7,7 +7,9 @@ class OutgoingSms extends Abstract {
         this._smsGate = smsGate;
     }
 
-    // TODO -
+    async handle() {
+        // TODO -
+    }
 }
 
 module.exports = OutgoingSms;
