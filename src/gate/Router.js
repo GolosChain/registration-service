@@ -2,8 +2,8 @@ const core = require('gls-core-service');
 const Gate = core.service.Gate;
 const SocialStrategy = require('./registerStrategy/Social');
 const MailStrategy = require('./registerStrategy/Mail');
-const OutgoingSmsStrategy = require('./registerStrategy/OutgoingSms');
-const IngoingSmsStrategy = require('./registerStrategy/IngoingSms');
+const SmsToUser = require('./registerStrategy/SmsToUser');
+const SmsFromUser = require('./registerStrategy/SmsFromUser');
 
 class Router extends Gate {
     constructor(smsGate) {
@@ -11,8 +11,8 @@ class Router extends Gate {
 
         this._socialStrategy = new SocialStrategy();
         this._mailStrategy = new MailStrategy();
-        this._outgoingSmsStrategy = new OutgoingSmsStrategy(smsGate);
-        this._ingoingSmsStrategy = new IngoingSmsStrategy(smsGate);
+        this._smsToUser = new SmsToUser(smsGate);
+        this._smsFromUser = new SmsFromUser(smsGate);
     }
 
     async start() {
@@ -39,10 +39,10 @@ class Router extends Gate {
                 return await this._socialStrategy.handle(data);
             case 'mail':
                 return await this._mailStrategy.handle(data);
-            case 'ingoingSms':
-                return await this._ingoingSmsStrategy.handle(data);
-            case 'outgoingSms':
-                return await this._outgoingSmsStrategy.handle(data);
+            case 'smsFromUser':
+                return await this._smsFromUser.handle(data);
+            case 'smsToUser':
+                return await this._smsToUser.handle(data);
             default:
                 throw 'Invalid strategy';
         }

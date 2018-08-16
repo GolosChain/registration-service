@@ -1,6 +1,6 @@
 const Abstract = require('./Abstract');
 
-class IngoingSms extends Abstract {
+class SmsToUser extends Abstract {
     constructor(smsGate) {
         super();
 
@@ -12,4 +12,4 @@ class IngoingSms extends Abstract {
     }
 }
 
-module.exports = IngoingSms;
+module.exports = SmsToUser;

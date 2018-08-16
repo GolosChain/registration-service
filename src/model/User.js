@@ -10,11 +10,11 @@ module.exports = MongoDB.makeModel(
         },
         registrationStrategy: {
             type: String,
-            enum: ['ingoingSms', 'outgoingSms', 'email', 'social'],
+            enum: ['smsToUser', 'smsFromUser', 'email', 'social'],
             required: true,
         },
 
-        // Strategy - ingoingSms, outgoingSms
+        // Strategy - smsToUser, smsFromUser
         // Phone section
         phoneHash: {
             type: String,
@@ -27,6 +27,11 @@ module.exports = MongoDB.makeModel(
         isPhoneVerified: {
             type: Boolean,
             default: false,
+        },
+
+        // Strategy - smsToUser
+        smsCode: {
+            type: String,
         },
 
         // Strategy - all (used for notify)
@@ -52,7 +57,7 @@ module.exports = MongoDB.makeModel(
     },
     {
         index: [
-            // Cleaner for - ingoingSms, outgoingSms
+            // Cleaner for - smsToUser, smsFromUser
             {
                 fields: {
                     registrationStrategy: 1,
