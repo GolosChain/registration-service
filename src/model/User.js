@@ -8,15 +8,17 @@ module.exports = MongoDB.makeModel(
             type: String,
             required: true,
         },
-
-        // Phone section
-        phone: {
+        registrationStrategy: {
             type: String,
+            enum: ['ingoingSms', 'outgoingSms', 'email', 'social'],
             required: true,
         },
-        phoneVerifyType: {
+
+        // Strategy - ingoingSms, outgoingSms
+        // Phone section
+        phoneHash: {
             type: String,
-            enum: ['ingoing', 'outgoing'],
+            required: true,
         },
         isPhoneVerifySend: {
             type: Boolean,
@@ -27,6 +29,7 @@ module.exports = MongoDB.makeModel(
             default: false,
         },
 
+        // Strategy - all (used for notify)
         // Mail section
         mail: {
             type: String,
@@ -44,15 +47,18 @@ module.exports = MongoDB.makeModel(
             type: Boolean,
             default: false,
         },
+
+        // TODO Another sections for another strategies
     },
     {
         index: [
-            // Cleaner
+            // Cleaner for - ingoingSms, outgoingSms
             {
                 fields: {
                     isPhoneVerified: 1,
                 },
             },
+            // TODO Another indexes for another strategies
         ],
     }
 );
