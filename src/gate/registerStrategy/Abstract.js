@@ -1,6 +1,10 @@
 class Abstract {
-    async handle() {
-        throw 'Undefined strategy handler';
+    async register() {
+        throw 'Undefined strategy register';
+    }
+
+    async verify() {
+        throw 'Undefined strategy verify';
     }
 }
 

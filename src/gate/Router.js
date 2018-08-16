@@ -5,8 +5,8 @@ const errors = core.HttpError;
 const env = require('../env');
 const SocialStrategy = require('./registerStrategy/Social');
 const MailStrategy = require('./registerStrategy/Mail');
-const SmsToUser = require('./registerStrategy/SmsToUser');
-const SmsFromUser = require('./registerStrategy/SmsFromUser');
+const SmsToUserStrategy = require('./registerStrategy/SmsToUser');
+const SmsFromUserStrategy = require('./registerStrategy/SmsFromUser');
 
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
 
@@ -16,15 +16,18 @@ class Router extends Gate {
 
         this._socialStrategy = new SocialStrategy();
         this._mailStrategy = new MailStrategy();
-        this._smsToUser = new SmsToUser(smsGate);
-        this._smsFromUser = new SmsFromUser(smsGate);
+        this._smsToUserStrategy = new SmsToUserStrategy(smsGate);
+        this._smsFromUserStrategy = new SmsFromUserStrategy(smsGate);
     }
 
     async start() {
         await super.start({
             serverRoutes: {
-                register: (...data) => this._register(...data),
-                verifySmsCode: (...data) => this._verifySmsCode(...data),
+                register: this._register.bind(this),
+                verifySmsToUserStrategy: this._smsToUserStrategy.verify.bind(this),
+                verifySmsFromUserStrategy: this._smsFromUserStrategy.verify.bind(this),
+                verifyMailStrategy: this._mailStrategy.verify.bind(this),
+                verifySocialStrategy: this._socialStrategy.verify.bind(this),
             },
         });
     }
@@ -53,23 +56,19 @@ class Router extends Gate {
     async _callRegisterStrategy(data) {
         switch (this._getCurrentStrategy()) {
             case 'social':
-                return await this._socialStrategy.handle(data);
+                return await this._socialStrategy.register(data);
             case 'mail':
-                return await this._mailStrategy.handle(data);
+                return await this._mailStrategy.register(data);
             case 'smsFromUser':
-                return await this._smsFromUser.handle(data);
+                return await this._smsFromUserStrategy.register(data);
             case 'smsToUser':
-                return await this._smsToUser.handle(data);
+                return await this._smsToUserStrategy.register(data);
             default:
                 throw 'Invalid strategy';
         }
     }
 
     _getCurrentStrategy() {
-        // TODO -
-    }
-
-    _verifySmsCode() {
         // TODO -
     }
 }

@@ -1,4 +1,5 @@
 const Abstract = require('./Abstract');
+const User = require('../../model/User');
 
 class SmsFromUser extends Abstract {
     constructor(smsGate) {
@@ -7,7 +8,11 @@ class SmsFromUser extends Abstract {
         this._smsGate = smsGate;
     }
 
-    async handle() {
+    async register() {
+        // TODO -
+    }
+
+    async verify() {
         // TODO -
     }
 }
