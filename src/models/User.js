@@ -20,10 +20,6 @@ module.exports = MongoDB.makeModel(
             type: String,
             required: true,
         },
-        isPhoneVerifySend: {
-            type: Boolean,
-            default: false,
-        },
         isPhoneVerified: {
             type: Boolean,
             default: false,
@@ -39,14 +35,6 @@ module.exports = MongoDB.makeModel(
         mail: {
             type: String,
             required: true,
-        },
-        isMailVerifySend: {
-            type: Boolean,
-            default: false,
-        },
-        isMailVerifyRetrySend: {
-            type: Boolean,
-            default: false,
         },
         isMailVerified: {
             type: Boolean,
