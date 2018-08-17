@@ -25,6 +25,7 @@
     "homepage": "https://github.com/GolosChain/registration-service#readme",
     "dependencies": {
         "gls-core-service": "git+https://github.com/GolosChain/core-service.git",
+        "random": "^2.0.12",
         "request": "^2.88.0",
         "request-promise-native": "^1.0.5"
     }
