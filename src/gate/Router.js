@@ -3,10 +3,10 @@ const core = require('gls-core-service');
 const Gate = core.service.Gate;
 const errors = core.HttpError;
 const env = require('../env');
-const SocialStrategy = require('./registerStrategy/Social');
-const MailStrategy = require('./registerStrategy/Mail');
-const SmsToUserStrategy = require('./registerStrategy/SmsToUser');
-const SmsFromUserStrategy = require('./registerStrategy/SmsFromUser');
+const SocialStrategy = require('./registerStrategies/Social');
+const MailStrategy = require('./registerStrategies/Mail');
+const SmsToUserStrategy = require('./registerStrategies/SmsToUser');
+const SmsFromUserStrategy = require('./registerStrategies/SmsFromUser');
 
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
 
@@ -28,6 +28,7 @@ class Router extends Gate {
                 verifySmsFromUserStrategy: this._smsFromUserStrategy.verify.bind(this),
                 verifyMailStrategy: this._mailStrategy.verify.bind(this),
                 verifySocialStrategy: this._socialStrategy.verify.bind(this),
+                changePhone: null // TODO -
             },
         });
     }
