@@ -9,6 +9,10 @@ class SmsGate extends BasicService {
     async stop() {
         // TODO -
     }
+
+    async sendTo(phone, message) {
+        // TODO -
+    }
 }
 
 module.exports = SmsGate;
