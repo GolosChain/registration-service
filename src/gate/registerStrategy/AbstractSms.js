@@ -2,7 +2,12 @@ const Abstract = require('./Abstract');
 
 class AbstractSms extends Abstract {
     _getLangBy(phone) {
-        // TODO -
+        switch (true) {
+            case /^\+7|^\+380|^\+375/.test(phone):
+                return 'ru';
+            default:
+                return 'en';
+        }
     }
 }
 
