@@ -1,4 +1,6 @@
 const golos = require('golos-js');
+const { key_utils: keyUtils } = require('golos-js/lib/auth/ecc');
+const env = require('../../env');
 
 class Abstract {
     async register() {
@@ -23,42 +25,40 @@ class Abstract {
         return { retryVerification: strategy };
     }
 
-    async _registerInBlockChain(user) {
-        // TODO -
+    async _registerInBlockChain(userName) {
+        let { ownerKey, activeKey, postingKey, memoKey } = this._makeBlockChainKeys();
+        let jsonMetadata = '{}';
+        let extensions = [];
 
-        await this._sendRegisterToBlockChain({
-            // TODO -
-        });
+        await golos.broadcast.accountCreateWithDelegationAsync(
+            env.GLS_REGISTRAR_KEY,
+            env.GLS_ACCOUNT_FEE,
+            env.GLS_ACCOUNT_DELEGATION_FEE,
+            env.GLS_REGISTRAR_ACCOUNT,
+            userName,
+            this._makeFormedMetaKey(ownerKey),
+            this._makeFormedMetaKey(activeKey),
+            this._makeFormedMetaKey(postingKey),
+            memoKey,
+            jsonMetadata,
+            extensions
+        );
     }
 
-    async _sendRegisterToBlockChain({
-        signingKey,
-        fee,
-        creator,
-        name,
-        jsonMetadata = '',
-        ownerKey,
-        activeKey,
-        postingKey,
-        memo,
-    }) {
-        // ugly blockchain format...
+    _makeBlockChainKeys() {
+        let random = keyUtils.get_random_key().toWif();
+        let pass = `P${random}`;
+        let keyTypes = ['owner', 'active', 'posting', 'memo'];
 
-        const sharedMeta = { weight_threshold: 1, account_auths: [] };
-        const operations = [['account_create']];
+        return golos.auth.generateKeys(user, pass, keyTypes);
+    }
 
-        operations[0].push({
-            fee,
-            creator,
-            new_account_name: name,
-            json_metadata: jsonMetadata,
-            owner: { ...sharedMeta, key_auths: [[ownerKey, 1]] },
-            active: { ...sharedMeta, key_auths: [[activeKey, 1]] },
-            posting: { ...sharedMeta, key_auths: [[postingKey, 1]] },
-            memo_key: memo,
-        });
-
-        await golos.broadcast.sendAsync({ extensions: [], operations }, [signingKey]);
+    _makeFormedMetaKey(key) {
+        return {
+            weight_threshold: 1,
+            account_auths: [],
+            key_auths: [[key, 1]],
+        };
     }
 }
 
