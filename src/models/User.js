@@ -29,6 +29,9 @@ module.exports = MongoDB.makeModel(
         smsCode: {
             type: String,
         },
+        smsCodeDate: {
+            type: Date,
+        },
 
         // Strategy - all (used for notify)
         // Mail section
