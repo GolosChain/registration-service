@@ -18,6 +18,10 @@ class Abstract {
     async _makeRetryMessage(strategy) {
         return { retryVerification: strategy };
     }
+
+    async _registerInBlockChain(user) {
+        // TODO -
+    }
 }
 
 module.exports = Abstract;

@@ -38,13 +38,7 @@ class SmsToUser extends AbstractSms {
     async changePhone({ user, phone }) {
         const user = await User.findOne({ user });
 
-        if (!user) {
-            throw errors.E404.error;
-        }
-
-        if (user.registrationStrategy !== 'smsToUser' || user.isPhoneVerified) {
-            throw errors.E406.error;
-        }
+        this._validateUserState(user);
 
         user.phone = phone;
 
@@ -52,7 +46,28 @@ class SmsToUser extends AbstractSms {
     }
 
     async verify({ user, code }) {
-        // TODO -
+        const user = await User.findOne({ user });
+
+        this._validateUserState(user);
+
+        if (user.smsCode !== code.toString()) {
+            throw errors.E400.error;
+        }
+
+        user.isPhoneVerified = true;
+
+        await user.save();
+        await this._registerInBlockChain(user.user);
+    }
+
+    _validateUserState(model) {
+        if (!model) {
+            throw errors.E404.error;
+        }
+
+        if (model.registrationStrategy !== 'smsToUser' || model.isPhoneVerified) {
+            throw errors.E406.error;
+        }
     }
 }
 
