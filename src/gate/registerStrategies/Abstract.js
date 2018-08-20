@@ -1,3 +1,5 @@
+const golos = require('golos-js');
+
 class Abstract {
     async register() {
         throw 'Not implemented';
@@ -12,7 +14,9 @@ class Abstract {
     }
 
     async _isUserInBlockChain(user) {
-        // TODO -
+        const accounts = await golos.api.getAccountsAsync([user]);
+        
+        return !!accounts.length;
     }
 
     async _makeRetryMessage(strategy) {
