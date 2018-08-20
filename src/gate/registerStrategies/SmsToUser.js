@@ -2,6 +2,7 @@ const random = require('random');
 const locale = require('../../locale');
 const core = require('gls-core-service');
 const stats = core.Stats.client;
+const errors = core.HttpError;
 const AbstractSms = require('./AbstractSms');
 const User = require('../../models/User');
 
@@ -32,6 +33,22 @@ class SmsToUser extends AbstractSms {
         await this._smsGate.sendTo(phone, message);
 
         stats.timing('reg_step1_sms_to_user', new Date() - timer);
+    }
+
+    async changePhone({ user, phone }) {
+        const user = await User.findOne({ user });
+
+        if (!user) {
+            throw errors.E404.error;
+        }
+
+        if (user.registrationStrategy !== 'smsToUser' || user.isPhoneVerified) {
+            throw errors.E406.error;
+        }
+
+        user.phone = phone;
+
+        await user.save();
     }
 
     async verify({ user, code }) {

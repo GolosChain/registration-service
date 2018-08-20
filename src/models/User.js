@@ -16,7 +16,7 @@ module.exports = MongoDB.makeModel(
 
         // Strategy - smsToUser, smsFromUser
         // Phone section
-        phoneHash: {
+        phone: {
             type: String,
             required: true,
         },

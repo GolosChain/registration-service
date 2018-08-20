@@ -28,7 +28,7 @@ class Router extends Gate {
                 verifySmsFromUserStrategy: this._smsFromUserStrategy.verify.bind(this),
                 verifyMailStrategy: this._mailStrategy.verify.bind(this),
                 verifySocialStrategy: this._socialStrategy.verify.bind(this),
-                changePhone: null // TODO -
+                changePhone: this._smsToUserStrategy.changePhone.bind(this),
             },
         });
     }
