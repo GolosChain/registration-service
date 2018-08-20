@@ -7,6 +7,8 @@ module.exports = MongoDB.makeModel(
         user: {
             type: String,
             required: true,
+            minLength: 2,
+            maxLength: 100,
         },
         registrationStrategy: {
             type: String,
@@ -19,6 +21,8 @@ module.exports = MongoDB.makeModel(
         phone: {
             type: String,
             required: true,
+            minLength: 3,
+            maxLength: 100,
         },
         isPhoneVerified: {
             type: Boolean,
@@ -38,6 +42,8 @@ module.exports = MongoDB.makeModel(
         mail: {
             type: String,
             required: true,
+            minLength: 6,
+            maxLength: 200,
         },
         isMailVerified: {
             type: Boolean,
