@@ -26,12 +26,12 @@ class SmsToUser extends AbstractSms {
         }
 
         const code = this._generateSmsCode();
-        const user = new User({ user, phone, mail, smsCode: code });
+        const model = new User({ user, phone, mail, smsCode: code });
         const message = this._makeSmsCodeMessage(phone, code);
 
-        user.smsCodeDate = new Date();
+        model.smsCodeDate = new Date();
 
-        await user.save();
+        await model.save();
         await this._smsGate.sendTo(phone, message);
 
         stats.timing('reg_sms_to_user_first_step', new Date() - timer);
@@ -39,35 +39,35 @@ class SmsToUser extends AbstractSms {
 
     async changePhone({ user, phone }) {
         const timer = new Date();
-        const user = await User.findOne({ user });
+        const model = await this._findActualUser(user);
 
-        this._validateUserState(user);
+        this._validateUserState(model);
 
-        user.phone = phone;
+        model.phone = phone;
 
-        await user.save();
+        await model.save();
 
         stats.timing('reg_sms_to_user_change_phone', new Date() - timer);
     }
 
     async resendCode({ user }) {
         const timer = new Date();
-        const user = await User.findOne({ user });
+        const model = await this._findActualUser(user);
 
-        this._validateUserState(user);
+        this._validateUserState(model);
 
-        if (new Date() - +user.smsCodeDate <= env.GLS_PHONE_VERIFY_TIMEOUT) {
+        if (new Date() - +model.smsCodeDate <= env.GLS_PHONE_VERIFY_TIMEOUT) {
             throw errors.E406.error;
         }
 
-        const phone = user.phone;
+        const phone = model.phone;
         const code = this._generateSmsCode();
         const message = this._makeSmsCodeMessage(phone, code);
 
-        user.smsCode = code;
-        user.smsCodeDate = new Date();
+        model.smsCode = code;
+        model.smsCodeDate = new Date();
 
-        await user.save();
+        await model.save();
         await this._smsGate.sendTo(phone, message);
 
         stats.timing('reg_sms_to_user_resend_code', new Date() - timer);
@@ -75,18 +75,18 @@ class SmsToUser extends AbstractSms {
 
     async verify({ user, code }) {
         const timer = new Date();
-        const user = await User.findOne({ user });
+        const model = await this._findActualUser(user);
 
-        this._validateUserState(user);
+        this._validateUserState(model);
 
-        if (user.smsCode !== code.toString()) {
+        if (model.smsCode !== code.toString()) {
             throw errors.E400.error;
         }
 
-        user.isPhoneVerified = true;
+        model.isPhoneVerified = true;
 
-        await user.save();
-        await this._registerInBlockChain(user.user);
+        await model.save();
+        await this._registerInBlockChain(model.user);
 
         stats.timing('reg_sms_to_user_verify', new Date() - timer);
     }
