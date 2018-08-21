@@ -1,8 +1,10 @@
+const R = require('ramda');
 const micro = require('micro');
 const core = require('gls-core-service');
 const BasicService = core.service.Basic;
 const Logger = core.Logger;
 const stats = core.Stats.client;
+const errors = core.HttpError;
 const env = require('../env');
 
 class SmsGate extends BasicService {
@@ -40,7 +42,45 @@ class SmsGate extends BasicService {
     }
 
     async _handleSmsFromUser(req, res) {
+        const data = micro.json(req);
+
+        if (!R.is(Object, data)) {
+            stats.increment('invalid_sms_callback_call');
+            this._sendError(res, 400);
+            return;
+        }
+
+        if (data.AccountSid !== env.GLS_SMS_GATE_SECRET_SID) {
+            stats.increment('unauthorized_sms_callback_call');
+            this._sendError(res, 403);
+            return;
+        }
+
+        let phone;
+
+        if (data.From) {
+            if (!R.is(String, data.From)) {
+                this._sendError(res, 400);
+                return;
+            } else {
+                phone = data.From.slice(1);
+            }
+        } else if (R.is(String, data.phone)) {
+            phone = data.phone;
+        } else {
+            this._sendError(res, 400);
+            return;
+        }
+
         // TODO -
+
+        micro.send(res, 200, { status: 'OK' });
+    }
+
+    _sendError(res, errorCode) {
+        const { code, message } = errors[`E${errorCode}`].error;
+
+        micro.send(res, code, message);
     }
 
     async sendTo(phone, message) {
