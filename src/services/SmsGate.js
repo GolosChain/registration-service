@@ -42,6 +42,24 @@ class SmsGate extends BasicService {
     }
 
     async _handleSmsFromUser(req, res) {
+        const data = this._tryExtractRequestData(req, res);
+
+        if (!this._tryValidateSecretSid(data, res)) {
+            return;
+        }
+
+        const phone = this._tryExtractPhone(data, res);
+
+        if (!phone) {
+            return;
+        }
+
+        this.emit('incoming', phone);
+
+        micro.send(res, 200, { status: 'OK' });
+    }
+
+    _tryExtractRequestData(req, res) {
         const data = micro.json(req);
 
         if (!R.is(Object, data)) {
@@ -50,12 +68,20 @@ class SmsGate extends BasicService {
             return;
         }
 
+        return data;
+    }
+
+    _tryValidateSecretSid(data, res) {
         if (data.AccountSid !== env.GLS_SMS_GATE_SECRET_SID) {
             stats.increment('unauthorized_sms_callback_call');
             this._sendError(res, 403);
             return;
         }
 
+        return true;
+    }
+
+    _tryExtractPhone(data, res) {
         let phone;
 
         if (data.From) {
@@ -72,9 +98,7 @@ class SmsGate extends BasicService {
             return;
         }
 
-        // TODO -
-
-        micro.send(res, 200, { status: 'OK' });
+        return phone;
     }
 
     _sendError(res, errorCode) {
