@@ -26,6 +26,7 @@
     "dependencies": {
         "gls-core-service": "git+https://github.com/GolosChain/core-service.git",
         "golos-js": "^0.7.2",
+        "micro": "^9.3.3",
         "random": "^2.0.12",
         "request": "^2.88.0",
         "request-promise-native": "^1.0.5"
