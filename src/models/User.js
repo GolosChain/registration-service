@@ -54,11 +54,14 @@ module.exports = MongoDB.makeModel(
     },
     {
         index: [
-            // Cleaner for - smsToUser, smsFromUser
+            // Strategy - smsFromUser
             {
                 fields: {
                     registrationStrategy: 1,
-                    isPhoneVerified: 1,
+                    phone: 1,
+                },
+                options: {
+                    sparse: true,
                 },
             },
             // TODO Another indexes for another strategies

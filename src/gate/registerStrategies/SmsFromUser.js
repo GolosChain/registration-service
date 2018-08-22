@@ -6,7 +6,7 @@ class SmsFromUser extends AbstractSms {
     constructor(smsGate) {
         super();
 
-        this._smsGate = smsGate;
+        smsGate.on('incoming', this.verify.bind(this));
     }
 
     async register({ user, phone, mail }) {
@@ -15,11 +15,18 @@ class SmsFromUser extends AbstractSms {
         await model.save();
     }
 
-    async verify() {
-        // TODO -
+    async verify(phone) {
+        const model = User.findOne({ phone, registrationStrategy: 'smsFromUser' });
+
+        if (!model) {
+            return;
+        }
+
+        model.isPhoneVerified = true;
+        await model.save();
 
         const lang = this._getLangBy(phone);
-        const message = locale.sms.successVerification[lang]({ user });
+        const message = locale.sms.successVerification[lang]({ user: model.user });
 
         await this._smsGate.sendTo(phone, message);
     }
