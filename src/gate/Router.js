@@ -1,3 +1,4 @@
+const golos = require('golos-js');
 const request = require('request-promise-native');
 const core = require('gls-core-service');
 const Gate = core.service.Gate;
