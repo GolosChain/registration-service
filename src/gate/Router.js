@@ -32,7 +32,7 @@ class Router extends Gate {
         await super.start({
             serverRoutes: {
                 // step api
-                register: this._register.bind(this),
+                registerFirstStep: this._registerFirstStep.bind(this),
                 verify: this._verify.bind(this),
                 registerInBlockChain: this._registerInBlockChain.bind(this),
 
@@ -44,7 +44,7 @@ class Router extends Gate {
         });
     }
 
-    async _register({ captcha, ...data }) {
+    async _registerFirstStep({ captcha, ...data }) {
         await this._checkCaptcha(captcha);
         return await this._callRegisterStrategy(data);
     }
@@ -86,7 +86,16 @@ class Router extends Gate {
             throw { code: 409, message: 'User already in blockchain.' };
         }
 
-        // TODO -
+        const model = await this._tryGetUser(data.user);
+        const target = this._strategyMap[model.registrationStrategy];
+
+        if (!target) {
+            stats.increment('invalid_user_strategy');
+            Logger.error('Invalid user strategy');
+            process.exit(1);
+        }
+
+        return await target.verify(model, data);
     }
 
     async _registerInBlockChain({ user, keys }) {
@@ -94,12 +103,7 @@ class Router extends Gate {
             throw { code: 409, message: 'User already in blockchain.' };
         }
 
-        const model = User.findOne({ user });
-
-        if (!model) {
-            throw errors.E403.error;
-        }
-
+        const model = await this._tryGetUser(user);
         const target = this._strategyMap[model.registrationStrategy];
 
         if (!target) {
@@ -109,6 +113,16 @@ class Router extends Gate {
         }
 
         return await target.registerInBlockChain(model, keys);
+    }
+
+    async _tryGetUser(user) {
+        const model = User.findOne({ user });
+
+        if (!model) {
+            throw errors.E403.error;
+        }
+
+        return model;
     }
 
     _getCurrentStrategy() {
