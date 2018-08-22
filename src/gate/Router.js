@@ -48,7 +48,7 @@ class Router extends Gate {
 
     async _register({ captcha, ...data }) {
         await this._checkCaptcha(captcha);
-        await this._callRegisterStrategy(data);
+        return await this._callRegisterStrategy(data);
     }
 
     async _checkCaptcha(captcha) {
@@ -76,14 +76,30 @@ class Router extends Gate {
             process.exit(1);
         }
 
-        await target.register(data);
+        return await target.register(data);
     }
 
     _getCurrentStrategy() {
         // TODO -
     }
 
-    async _registerInBlockChain(user, keys) {
+    async _changePhone({ user, phone }) {
+        const model = User.findOne({ user });
+
+        if (!model) {
+            throw errors.E403.error;
+        }
+
+        const strategy = model.registrationStrategy;
+
+        if (!['smsToUser', 'smsFromUser'].includes(strategy)) {
+            throw errors.E406.error;
+        }
+
+        return await this._strategyMap[strategy].changePhone(model, phone);
+    }
+
+    async _registerInBlockChain({ user, keys }) {
         const model = User.findOne({ user });
 
         if (!model) {
@@ -98,7 +114,7 @@ class Router extends Gate {
             process.exit(1);
         }
 
-        await target.registerInBlockChain(model, keys);
+        return await target.registerInBlockChain(model, keys);
     }
 }
 
