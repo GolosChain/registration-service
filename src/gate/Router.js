@@ -26,22 +26,20 @@ class Router extends Gate {
     }
 
     async start() {
-        const social = this._strategyMap['social'];
-        const mail = this._strategyMap['mail'];
         const smsToUser = this._strategyMap['smsToUser'];
         const smsFromUser = this._strategyMap['smsFromUser'];
 
         await super.start({
             serverRoutes: {
+                // step api
                 register: this._register.bind(this),
-                verifySmsToUserStrategy: smsToUser.verify.bind(smsToUser),
-                verifySmsFromUserStrategy: smsFromUser.verify.bind(smsFromUser),
-                verifyMailStrategy: mail.verify.bind(mail),
-                verifySocialStrategy: social.verify.bind(social),
-                changePhone: smsToUser.changePhone.bind(smsToUser),
+                verify: this._verify.bind(this),
+                registerInBlockChain: this._registerInBlockChain.bind(this),
+
+                // strategy-specific api
+                changePhone: this._changePhone.bind(this),
                 resendSmsCode: smsToUser.resendCode.bind(smsToUser),
                 subscribeOnSmsGet: smsFromUser.subscribeOnSmsGet.bind(smsFromUser),
-                registerInBlockChain: this._registerInBlockChain.bind(this),
             },
         });
     }
@@ -68,6 +66,10 @@ class Router extends Gate {
     }
 
     async _callRegisterStrategy(data) {
+        if (this._isUserInBlockChain(data.user)) {
+            throw { code: 409, message: 'User already in blockchain.' };
+        }
+
         const target = this._strategyMap[this._getCurrentStrategy()];
 
         if (!target) {
@@ -77,6 +79,36 @@ class Router extends Gate {
         }
 
         return await target.register(data);
+    }
+
+    async _verify(data) {
+        if (this._isUserInBlockChain(data.user)) {
+            throw { code: 409, message: 'User already in blockchain.' };
+        }
+
+        // TODO -
+    }
+
+    async _registerInBlockChain({ user, keys }) {
+        if (this._isUserInBlockChain(user)) {
+            throw { code: 409, message: 'User already in blockchain.' };
+        }
+
+        const model = User.findOne({ user });
+
+        if (!model) {
+            throw errors.E403.error;
+        }
+
+        const target = this._strategyMap[model.registrationStrategy];
+
+        if (!target) {
+            stats.increment('invalid_user_strategy');
+            Logger.error('Invalid user strategy');
+            process.exit(1);
+        }
+
+        return await target.registerInBlockChain(model, keys);
     }
 
     _getCurrentStrategy() {
@@ -99,22 +131,10 @@ class Router extends Gate {
         return await this._strategyMap[strategy].changePhone(model, phone);
     }
 
-    async _registerInBlockChain({ user, keys }) {
-        const model = User.findOne({ user });
+    async _isUserInBlockChain(user) {
+        const accounts = await golos.api.getAccountsAsync([user]);
 
-        if (!model) {
-            throw errors.E403.error;
-        }
-
-        const target = this._strategyMap[model.registrationStrategy];
-
-        if (!target) {
-            stats.increment('invalid_user_strategy');
-            Logger.error('Invalid user strategy');
-            process.exit(1);
-        }
-
-        return await target.registerInBlockChain(model, keys);
+        return !!accounts.length;
     }
 }
 
