@@ -2,11 +2,14 @@ const request = require('request-promise-native');
 const core = require('gls-core-service');
 const Gate = core.service.Gate;
 const errors = core.HttpError;
+const stats = core.Stats.client;
+const Logger = core.Logger;
 const env = require('../env');
 const SocialStrategy = require('./registerStrategies/Social');
 const MailStrategy = require('./registerStrategies/Mail');
 const SmsToUserStrategy = require('./registerStrategies/SmsToUser');
 const SmsFromUserStrategy = require('./registerStrategies/SmsFromUser');
+const User = require('../models/User');
 
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
 
@@ -14,22 +17,31 @@ class Router extends Gate {
     constructor(smsGate) {
         super();
 
-        this._socialStrategy = new SocialStrategy();
-        this._mailStrategy = new MailStrategy();
-        this._smsToUserStrategy = new SmsToUserStrategy(smsGate);
-        this._smsFromUserStrategy = new SmsFromUserStrategy(smsGate);
+        this._strategyMap = {
+            social: new SocialStrategy(),
+            mail: new MailStrategy(),
+            smsToUser: new SmsToUserStrategy(smsGate),
+            smsFromUser: new SmsFromUserStrategy(smsGate),
+        };
     }
 
     async start() {
+        const social = this._strategyMap['social'];
+        const mail = this._strategyMap['mail'];
+        const smsToUser = this._strategyMap['smsToUser'];
+        const smsFromUser = this._strategyMap['smsFromUser'];
+
         await super.start({
             serverRoutes: {
                 register: this._register.bind(this),
-                verifySmsToUserStrategy: this._smsToUserStrategy.verify.bind(this),
-                verifySmsFromUserStrategy: this._smsFromUserStrategy.verify.bind(this),
-                verifyMailStrategy: this._mailStrategy.verify.bind(this),
-                verifySocialStrategy: this._socialStrategy.verify.bind(this),
-                changePhone: this._smsToUserStrategy.changePhone.bind(this),
-                resendSmsCode: this._smsToUserStrategy.resendCode.bind(this),
+                verifySmsToUserStrategy: smsToUser.verify.bind(smsToUser),
+                verifySmsFromUserStrategy: smsFromUser.verify.bind(smsFromUser),
+                verifyMailStrategy: mail.verify.bind(mail),
+                verifySocialStrategy: social.verify.bind(social),
+                changePhone: smsToUser.changePhone.bind(smsToUser),
+                resendSmsCode: smsToUser.resendCode.bind(smsToUser),
+                subscribeOnSmsGet: smsFromUser.subscribeOnSmsGet.bind(smsFromUser),
+                registerInBlockChain: this._registerInBlockChain.bind(this),
             },
         });
     }
@@ -56,22 +68,37 @@ class Router extends Gate {
     }
 
     async _callRegisterStrategy(data) {
-        switch (this._getCurrentStrategy()) {
-            case 'social':
-                return await this._socialStrategy.register(data);
-            case 'mail':
-                return await this._mailStrategy.register(data);
-            case 'smsFromUser':
-                return await this._smsFromUserStrategy.register(data);
-            case 'smsToUser':
-                return await this._smsToUserStrategy.register(data);
-            default:
-                throw 'Invalid strategy';
+        const target = this._strategyMap[this._getCurrentStrategy()];
+
+        if (!target) {
+            stats.increment('invalid_generated_strategy');
+            Logger.error('Invalid generated strategy');
+            process.exit(1);
         }
+
+        await target.register(data);
     }
 
     _getCurrentStrategy() {
         // TODO -
+    }
+
+    async _registerInBlockChain(user, keys) {
+        const model = User.findOne({ user });
+
+        if (!model) {
+            throw errors.E403.error;
+        }
+
+        const target = this._strategyMap[model.registrationStrategy];
+
+        if (!target) {
+            stats.increment('invalid_user_strategy');
+            Logger.error('Invalid user strategy');
+            process.exit(1);
+        }
+
+        await target.registerInBlockChain(model, keys);
     }
 }
 

@@ -1,6 +1,7 @@
 const Abstract = require('./Abstract');
 const core = require('gls-core-service');
 const Moments = core.Moments;
+const errors = core.HttpError;
 const env = require('../../env');
 const User = require('../../models/User');
 
@@ -32,6 +33,14 @@ class AbstractSms extends Abstract {
         const expirationEdge = Moments.ago(expirationValue * 60 * 60 * 1000);
 
         query.createdAt = { $gt: expirationEdge };
+    }
+
+    async registerInBlockChain(model, keys) {
+        if (!model.isPhoneVerified) {
+            throw errors.E403.error;
+        }
+
+        // TODO -
     }
 }
 

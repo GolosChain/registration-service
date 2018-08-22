@@ -54,6 +54,12 @@ module.exports = MongoDB.makeModel(
     },
     {
         index: [
+            // Search and identify
+            {
+                fields: {
+                    user: 1,
+                },
+            },
             // Strategy - smsFromUser
             {
                 fields: {

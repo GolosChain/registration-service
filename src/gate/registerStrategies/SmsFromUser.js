@@ -30,6 +30,10 @@ class SmsFromUser extends AbstractSms {
 
         await this._smsGate.sendTo(phone, message);
     }
+
+    async subscribeOnSmsGet(user, phone) {
+        // TODO -
+    }
 }
 
 module.exports = SmsFromUser;

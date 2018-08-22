@@ -11,6 +11,10 @@ class Abstract {
         throw 'Not implemented';
     }
 
+    async registerInBlockChain(model, keys) {
+        throw 'Not implemented';
+    }
+
     async _isUserDropVerification(user) {
         throw 'Not implemented';
     }
@@ -26,7 +30,7 @@ class Abstract {
     }
 
     async _registerInBlockChain(userName) {
-        let { ownerKey, activeKey, postingKey, memoKey } = this._makeBlockChainKeys();
+        let { ownerKey, activeKey, postingKey, memoKey } = this._makeBlockChainKeys(userName);
         let jsonMetadata = '{}';
         let extensions = [];
 
@@ -45,7 +49,7 @@ class Abstract {
         );
     }
 
-    _makeBlockChainKeys() {
+    _makeBlockChainKeys(user) {
         let random = keyUtils.get_random_key().toWif();
         let pass = `P${random}`;
         let keyTypes = ['owner', 'active', 'posting', 'memo'];
