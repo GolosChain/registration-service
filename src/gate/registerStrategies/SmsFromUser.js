@@ -1,3 +1,5 @@
+const core = require('gls-core-service');
+const stats = core.Stats.client;
 const locale = require('../../locale');
 const AbstractSms = require('./AbstractSms');
 const User = require('../../models/User');
@@ -10,11 +12,24 @@ class SmsFromUser extends AbstractSms {
     }
 
     async register({ user, phone, mail }) {
-        const model = new User({ user, phone, mail });
+        const timer = new Date();
+        let model = User.findOne({ user });
+
+        if (model) {
+            if (model.isPhoneVerified) {
+                return { state: 'toBlockChain' };
+            } else {
+                return { state: 'verify' };
+            }
+        }
+
+        model = new User({ user, phone, mail });
 
         await model.save();
+        stats.timing('sms_to_user_first_step', new Date() - timer);
     }
 
+    // TODO -
     async verify(phone) {
         const model = User.findOne({ phone, registrationStrategy: 'smsFromUser' });
 
