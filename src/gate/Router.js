@@ -84,47 +84,11 @@ class Router extends Gate {
     }
 
     async _verify(data) {
-        if (await this._isUserInBlockChain(data.user)) {
-            throw { code: 409, message: 'User already in blockchain.' };
-        }
-
-        const model = await this._tryGetUser(data.user);
-        const target = this._strategyMap[model.registrationStrategy];
-
-        if (!target) {
-            stats.increment('invalid_user_strategy');
-            Logger.error('Invalid user strategy');
-            process.exit(1);
-        }
-
-        return await target.verify(model, data);
+        // TODO -
     }
 
     async _toBlockChain({ user, keys }) {
-        if (await this._isUserInBlockChain(user)) {
-            throw { code: 409, message: 'User already in blockchain.' };
-        }
-
-        const model = await this._tryGetUser(user);
-        const target = this._strategyMap[model.registrationStrategy];
-
-        if (!target) {
-            stats.increment('invalid_user_strategy');
-            Logger.error('Invalid user strategy');
-            process.exit(1);
-        }
-
-        return await target.registerInBlockChain(model, keys);
-    }
-
-    async _tryGetUser(user) {
-        const model = User.findOne({ user });
-
-        if (!model) {
-            throw errors.E403.error;
-        }
-
-        return model;
+        // TODO -
     }
 
     _getCurrentStrategy() {
@@ -133,19 +97,7 @@ class Router extends Gate {
     }
 
     async _changePhone({ user, phone }) {
-        const model = User.findOne({ user });
-
-        if (!model) {
-            throw errors.E403.error;
-        }
-
-        const strategy = model.registrationStrategy;
-
-        if (!['smsToUser', 'smsFromUser'].includes(strategy)) {
-            throw errors.E406.error;
-        }
-
-        return await this._strategyMap[strategy].changePhone(model, phone);
+        // TODO -
     }
 
     async _isUserInBlockChain(user) {

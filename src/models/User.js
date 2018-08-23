@@ -15,6 +15,23 @@ module.exports = MongoDB.makeModel(
             enum: ['smsToUser', 'smsFromUser', 'email', 'social'],
             required: true,
         },
+        keys: {
+            owner: {
+                type: String,
+            },
+            active: {
+                type: String,
+            },
+            posting: {
+                type: String,
+            },
+            memo: {
+                type: String,
+            },
+        },
+        block: {
+            type: Number,
+        },
 
         // Strategy - smsToUser, smsFromUser
         // Phone section

@@ -36,8 +36,8 @@ class Abstract {
 
         await golos.broadcast.accountCreateWithDelegationAsync(
             env.GLS_REGISTRAR_KEY,
-            env.GLS_ACCOUNT_FEE,
-            env.GLS_ACCOUNT_DELEGATION_FEE,
+            env.GLS_ACCOUNT_FEE, // TODO from blockchain
+            env.GLS_ACCOUNT_DELEGATION_FEE, // TODO calculate from static (golos to vest)
             env.GLS_REGISTRAR_ACCOUNT,
             userName,
             this._makeFormedMetaKey(ownerKey),
