@@ -9,6 +9,8 @@ class SmsFromUser extends AbstractSms {
         super();
 
         smsGate.on('incoming', this.verify.bind(this));
+
+        this._subscribes = new Map();
     }
 
     async register({ user, phone, mail }) {
@@ -34,9 +36,10 @@ class SmsFromUser extends AbstractSms {
         stats.timing('sms_to_user_first_step', new Date() - timer);
     }
 
-    // TODO -
     async verify(phone) {
-        const model = User.findOne({ phone, registrationStrategy: 'smsFromUser' });
+        const timer = new Date();
+        const query = this._addExpirationEdge({ phone, registrationStrategy: 'smsFromUser' });
+        const model = await User.findOne(query);
 
         if (!model) {
             return;
@@ -49,10 +52,24 @@ class SmsFromUser extends AbstractSms {
         const message = locale.sms.successVerification[lang]({ user: model.user });
 
         await this._smsGate.sendTo(phone, message);
+
+        try {
+            const channelId = this._subscribes.get(phone);
+
+            await this.sendTo('facade', 'transfer', {
+                channelId,
+                method: 'registration.phoneVerified',
+                result: { status: 'OK' },
+            });
+        } catch (error) {
+            // do nothing, notify late
+        }
+
+        stats.timing('sms_to_user_verify', new Date() - timer);
     }
 
-    async subscribeOnSmsGet(user, phone) {
-        // TODO -
+    async subscribeOnSmsGet({ channelId, phone }) {
+        this._subscribes.set(phone, channelId);
     }
 }
 
