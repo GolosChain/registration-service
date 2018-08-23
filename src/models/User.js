@@ -21,7 +21,7 @@ module.exports = MongoDB.makeModel(
         phone: {
             type: String,
             required: true,
-            minLength: 3,
+            minLength: 6,
             maxLength: 100,
         },
         isPhoneVerified: {

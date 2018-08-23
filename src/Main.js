@@ -1,5 +1,5 @@
 const core = require('gls-core-service');
-const env = require('./Env');
+const env = require('./env');
 const stats = core.Stats.client;
 const BasicService = core.service.Basic;
 const MongoDB = core.service.MongoDB;

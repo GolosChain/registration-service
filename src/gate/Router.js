@@ -33,9 +33,9 @@ class Router extends Gate {
         await super.start({
             serverRoutes: {
                 // step api
-                registerFirstStep: this._registerFirstStep.bind(this),
+                firstStep: this._firstStep.bind(this),
                 verify: this._verify.bind(this),
-                registerInBlockChain: this._registerInBlockChain.bind(this),
+                toBlockChain: this._toBlockChain.bind(this),
 
                 // strategy-specific api
                 changePhone: this._changePhone.bind(this),
@@ -45,7 +45,7 @@ class Router extends Gate {
         });
     }
 
-    async _registerFirstStep({ captcha, ...data }) {
+    async _firstStep({ captcha, ...data }) {
         await this._checkCaptcha(captcha);
         return await this._callRegisterStrategy(data);
     }
@@ -61,13 +61,14 @@ class Router extends Gate {
             },
         });
 
-        if (result.success !== true) {
+        // TODO -
+        if (false && result.success !== true) {
             throw errors.E403.error;
         }
     }
 
-    async _callRegisterStrategy(data) {
-        if (this._isUserInBlockChain(data.user)) {
+    async _callRegisterStrategy({ user, phone, mail }) {
+        if (await this._isUserInBlockChain(user)) {
             throw { code: 409, message: 'User already in blockchain.' };
         }
 
@@ -79,11 +80,11 @@ class Router extends Gate {
             process.exit(1);
         }
 
-        return await target.register(data);
+        return await target.register({ user, phone, mail });
     }
 
     async _verify(data) {
-        if (this._isUserInBlockChain(data.user)) {
+        if (await this._isUserInBlockChain(data.user)) {
             throw { code: 409, message: 'User already in blockchain.' };
         }
 
@@ -99,8 +100,8 @@ class Router extends Gate {
         return await target.verify(model, data);
     }
 
-    async _registerInBlockChain({ user, keys }) {
-        if (this._isUserInBlockChain(user)) {
+    async _toBlockChain({ user, keys }) {
+        if (await this._isUserInBlockChain(user)) {
             throw { code: 409, message: 'User already in blockchain.' };
         }
 
@@ -127,7 +128,8 @@ class Router extends Gate {
     }
 
     _getCurrentStrategy() {
-        // TODO -
+        // TODO Dynamic calculation
+        return 'smsFromUser';
     }
 
     async _changePhone({ user, phone }) {
