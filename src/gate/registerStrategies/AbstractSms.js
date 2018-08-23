@@ -33,6 +33,8 @@ class AbstractSms extends Abstract {
         const expirationEdge = Moments.ago(expirationValue * 60 * 60 * 1000);
 
         query.createdAt = { $gt: expirationEdge };
+
+        return query;
     }
 
     async registerInBlockChain(model, keys) {

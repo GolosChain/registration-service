@@ -7,6 +7,7 @@ const env = require('../../env');
 const AbstractSms = require('./AbstractSms');
 const User = require('../../models/User');
 
+// TODO Draft! Do not use!
 class SmsToUser extends AbstractSms {
     constructor(smsGate) {
         super();

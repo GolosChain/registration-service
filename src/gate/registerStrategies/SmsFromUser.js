@@ -13,7 +13,7 @@ class SmsFromUser extends AbstractSms {
 
     async register({ user, phone, mail }) {
         const timer = new Date();
-        let model = User.findOne({ user });
+        let model = await this._findActualUser(user);
 
         if (model) {
             if (model.isPhoneVerified) {
@@ -23,9 +23,14 @@ class SmsFromUser extends AbstractSms {
             }
         }
 
-        model = new User({ user, phone, mail });
+        model = new User({ user, phone, mail, registrationStrategy: 'smsFromUser' });
 
-        await model.save();
+        try {
+            await model.save();
+        } catch (error) {
+            throw { code: 400, message: error.message };
+        }
+
         stats.timing('sms_to_user_first_step', new Date() - timer);
     }
 
