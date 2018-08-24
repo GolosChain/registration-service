@@ -15,18 +15,30 @@ module.exports = MongoDB.makeModel(
             enum: ['smsToUser', 'smsFromUser', 'email', 'social'],
             required: true,
         },
-        keys: {
+        registered: {
+            type: Boolean,
+            default: false,
+        },
+        publicKeys: {
             owner: {
                 type: String,
+                minLength: 53,
+                maxLength: 53,
             },
             active: {
                 type: String,
+                minLength: 53,
+                maxLength: 53,
             },
             posting: {
                 type: String,
+                minLength: 53,
+                maxLength: 53,
             },
             memo: {
                 type: String,
+                minLength: 53,
+                maxLength: 53,
             },
         },
         block: {

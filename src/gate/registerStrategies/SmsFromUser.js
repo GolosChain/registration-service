@@ -1,5 +1,6 @@
 const core = require('gls-core-service');
 const stats = core.Stats.client;
+const errors = core.HttpError;
 const locale = require('../../locale');
 const AbstractSms = require('./AbstractSms');
 const User = require('../../models/User');
@@ -70,6 +71,20 @@ class SmsFromUser extends AbstractSms {
 
     async subscribeOnSmsGet({ channelId, phone }) {
         this._subscribes.set(phone, channelId);
+    }
+
+    async toBlockChain(user, keys) {
+        const model = this._findActualUser(user);
+
+        if (!model || model.registrationStrategy !== 'smsFromUser') {
+            throw errors.E404.error;
+        }
+
+        if (!model.isPhoneVerified) {
+            throw errors.E400.error;
+        }
+
+        await this._registerInBlockChain(user, keys);
     }
 }
 

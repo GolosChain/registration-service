@@ -10,7 +10,6 @@ const SocialStrategy = require('./registerStrategies/Social');
 const MailStrategy = require('./registerStrategies/Mail');
 const SmsToUserStrategy = require('./registerStrategies/SmsToUser');
 const SmsFromUserStrategy = require('./registerStrategies/SmsFromUser');
-const User = require('../models/User');
 
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
 
@@ -87,8 +86,18 @@ class Router extends Gate {
         // TODO -
     }
 
-    async _toBlockChain({ user, keys }) {
-        // TODO -
+    async _toBlockChain({ user, keys, strategy }) {
+        if (await this._isUserInBlockChain(user)) {
+            throw { code: 409, message: 'User already in blockchain.' };
+        }
+
+        const target = this._strategyMap[strategy];
+
+        if (!target) {
+            throw errors.E400.error;
+        }
+
+        target.toBlockChain(user, keys);
     }
 
     _getCurrentStrategy() {

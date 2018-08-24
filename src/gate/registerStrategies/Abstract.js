@@ -1,6 +1,9 @@
 const golos = require('golos-js');
-const { key_utils: keyUtils } = require('golos-js/lib/auth/ecc');
+const core = require('gls-core-service');
+const BlockChainValues = core.utils.BlockChainValues;
+const Moments = core.Moments;
 const env = require('../../env');
+const User = require('../../models/User');
 
 class Abstract {
     async register() {
@@ -11,50 +14,28 @@ class Abstract {
         throw 'Not implemented';
     }
 
-    async registerInBlockChain(model, keys) {
-        throw 'Not implemented';
-    }
-
-    async _isUserDropVerification(user) {
-        throw 'Not implemented';
-    }
-
-    async _isUserInBlockChain(user) {
-        const accounts = await golos.api.getAccountsAsync([user]);
-
-        return !!accounts.length;
-    }
-
-    async _makeRetryMessage(strategy) {
-        return { retryVerification: strategy };
-    }
-
-    async _registerInBlockChain(userName) {
-        let { ownerKey, activeKey, postingKey, memoKey } = this._makeBlockChainKeys(userName);
-        let jsonMetadata = '{}';
-        let extensions = [];
+    async _registerInBlockChain(user, { owner, active, posting, memo }) {
+        const jsonMetadata = '{}';
+        const extensions = [];
+        const chainProps = await golos.api.getChainPropertiesAsync();
+        const fee = chainProps.create_account_min_golos_fee;
+        const globalProps = BlockChainValues.getDynamicGlobalProperties();
+        const golosDelegation = env.GLS_ACCOUNT_DELEGATION_FEE;
+        const vestsDelegation = BlockChainValues.golosToVests(golosDelegation, globalProps);
 
         await golos.broadcast.accountCreateWithDelegationAsync(
             env.GLS_REGISTRAR_KEY,
-            env.GLS_ACCOUNT_FEE, // TODO from blockchain
-            env.GLS_ACCOUNT_DELEGATION_FEE, // TODO calculate from static (golos to vest)
+            fee,
+            vestsDelegation,
             env.GLS_REGISTRAR_ACCOUNT,
-            userName,
-            this._makeFormedMetaKey(ownerKey),
-            this._makeFormedMetaKey(activeKey),
-            this._makeFormedMetaKey(postingKey),
-            memoKey,
+            user,
+            this._makeFormedMetaKey(owner),
+            this._makeFormedMetaKey(active),
+            this._makeFormedMetaKey(posting),
+            memo,
             jsonMetadata,
             extensions
         );
-    }
-
-    _makeBlockChainKeys(user) {
-        let random = keyUtils.get_random_key().toWif();
-        let pass = `P${random}`;
-        let keyTypes = ['owner', 'active', 'posting', 'memo'];
-
-        return golos.auth.generateKeys(user, pass, keyTypes);
     }
 
     _makeFormedMetaKey(key) {
@@ -63,6 +44,21 @@ class Abstract {
             account_auths: [],
             key_auths: [[key, 1]],
         };
+    }
+
+    async _findActualUser(user) {
+        const query = this._addExpirationEdge({ user });
+
+        return await User.findOne(query);
+    }
+
+    _addExpirationEdge(query) {
+        const expirationValue = env.GLS_SMS_VERIFY_EXPIRATION_HOURS;
+        const expirationEdge = Moments.ago(expirationValue * 60 * 60 * 1000);
+
+        query.createdAt = { $gt: expirationEdge };
+
+        return query;
     }
 }
 
