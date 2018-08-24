@@ -19,14 +19,14 @@ class Abstract {
         const extensions = [];
         const chainProps = await golos.api.getChainPropertiesAsync();
         const fee = chainProps.create_account_min_golos_fee;
-        const globalProps = BlockChainValues.getDynamicGlobalProperties();
+        const globalProps = await BlockChainValues.getDynamicGlobalProperties();
         const golosDelegation = env.GLS_ACCOUNT_DELEGATION_FEE;
         const vestsDelegation = BlockChainValues.golosToVests(golosDelegation, globalProps);
 
         await golos.broadcast.accountCreateWithDelegationAsync(
             env.GLS_REGISTRAR_KEY,
             fee,
-            vestsDelegation,
+            `${vestsDelegation} GESTS`,
             env.GLS_REGISTRAR_ACCOUNT,
             user,
             this._makeFormedMetaKey(owner),
