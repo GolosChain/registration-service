@@ -47,23 +47,22 @@ class SmsGate extends BasicService {
             const data = await this._tryExtractRequestData(req, res);
 
             if (!this._tryValidateSecretSid(data, res)) {
-                micro.send(res, 403, '');
                 return;
             }
 
             const phone = this._tryExtractPhone(data, res);
 
             if (!phone) {
-                micro.send(res, 404, '');
                 return;
             }
 
             this.emit('incoming', phone);
 
-            micro.send(res, 200, '');
+            this._sendOk(res);
         } catch (error) {
+            stats.increment('invalid_sms_callback_parse');
             Logger.error(`Sms from user - ${error}`);
-            micro.send(res, 500, '');
+            this._sendError(res, 500);
         }
     }
 
@@ -107,6 +106,10 @@ class SmsGate extends BasicService {
         }
 
         return phone;
+    }
+
+    _sendOk(res) {
+        micro.send(res, 200, {result: 'OK'});
     }
 
     _sendError(res, errorCode) {
