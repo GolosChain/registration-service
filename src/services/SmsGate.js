@@ -1,5 +1,6 @@
 const R = require('ramda');
 const micro = require('micro');
+const bodyParser = require('urlencoded-body-parser');
 const core = require('gls-core-service');
 const BasicService = core.service.Basic;
 const Logger = core.Logger;
@@ -43,7 +44,7 @@ class SmsGate extends BasicService {
 
     async _handleSmsFromUser(req, res) {
         try {
-            const data = this._tryExtractRequestData(req, res);
+            const data = await this._tryExtractRequestData(req, res);
 
             if (!this._tryValidateSecretSid(data, res)) {
                 micro.send(res, 403, '');
@@ -66,8 +67,8 @@ class SmsGate extends BasicService {
         }
     }
 
-    _tryExtractRequestData(req, res) {
-        const data = micro.json(req);
+    async _tryExtractRequestData(req, res) {
+        const data = await bodyParser(req);
 
         if (!R.is(Object, data)) {
             stats.increment('invalid_sms_callback_call');

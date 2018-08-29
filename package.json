@@ -30,6 +30,7 @@
         "ramda": "^0.25.0",
         "random": "^2.0.12",
         "request": "^2.88.0",
-        "request-promise-native": "^1.0.5"
+        "request-promise-native": "^1.0.5",
+        "urlencoded-body-parser": "^2.0.1"
     }
 }
