@@ -42,21 +42,28 @@ class SmsGate extends BasicService {
     }
 
     async _handleSmsFromUser(req, res) {
-        const data = this._tryExtractRequestData(req, res);
+        try {
+            const data = this._tryExtractRequestData(req, res);
 
-        if (!this._tryValidateSecretSid(data, res)) {
-            return;
+            if (!this._tryValidateSecretSid(data, res)) {
+                micro.send(res, 403, '');
+                return;
+            }
+
+            const phone = this._tryExtractPhone(data, res);
+
+            if (!phone) {
+                micro.send(res, 404, '');
+                return;
+            }
+
+            this.emit('incoming', phone);
+
+            micro.send(res, 200, '');
+        } catch (error) {
+            Logger.error(`Sms from user - ${error}`);
+            micro.send(res, 500, '');
         }
-
-        const phone = this._tryExtractPhone(data, res);
-
-        if (!phone) {
-            return;
-        }
-
-        this.emit('incoming', phone);
-
-        micro.send(res, 200, { status: 'OK' });
     }
 
     _tryExtractRequestData(req, res) {
