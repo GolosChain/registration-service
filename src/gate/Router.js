@@ -67,9 +67,7 @@ class Router extends Gate {
     }
 
     async _callRegisterStrategy({ user, phone, mail }) {
-        if (await this._isUserInBlockChain(user)) {
-            throw { code: 409, message: 'User already in blockchain.' };
-        }
+        await this._throwIfUserInBlockChain(user);
 
         const target = this._strategyMap[this._getCurrentStrategy()];
 
@@ -87,9 +85,7 @@ class Router extends Gate {
     }
 
     async _toBlockChain({ user, keys, strategy }) {
-        if (await this._isUserInBlockChain(user)) {
-            throw { code: 409, message: 'User already in blockchain.' };
-        }
+        await this._throwIfUserInBlockChain(user);
 
         const target = this._strategyMap[strategy];
 
@@ -105,14 +101,24 @@ class Router extends Gate {
         return 'smsFromUser';
     }
 
-    async _changePhone({ user, phone }) {
-        // TODO -
+    async _changePhone({ user, phone, strategy }) {
+        await this._throwIfUserInBlockChain(user);
+
+        const target = this._strategyMap[strategy];
+
+        if (!target || !['smsFromUser', 'smsToUser'].includes(target)) {
+            throw errors.E400.error;
+        }
+
+        target.changePhone({ user, phone });
     }
 
-    async _isUserInBlockChain(user) {
+    async _throwIfUserInBlockChain(user) {
         const accounts = await golos.api.getAccountsAsync([user]);
 
-        return !!accounts.length;
+        if (accounts.length) {
+            throw { code: 409, message: 'User already in blockchain.' };
+        }
     }
 }
 

@@ -16,7 +16,13 @@ class SmsFromUser extends AbstractSms {
 
     async register({ user, phone, mail }) {
         const timer = new Date();
-        let model = await this._findActualUser(user);
+        let model = await User.findOne({ phone });
+
+        if (model) {
+            throw { code: 409, message: 'Phone is already used.' };
+        }
+
+        model = await this._findActualUser(user);
 
         if (model) {
             if (model.isPhoneVerified) {
@@ -34,7 +40,23 @@ class SmsFromUser extends AbstractSms {
             throw { code: 400, message: error.message };
         }
 
-        stats.timing('sms_to_user_first_step', new Date() - timer);
+        stats.timing('sms_from_user_first_step', new Date() - timer);
+
+        return { strategy: 'smsFromUser' };
+    }
+
+    async changePhone({ user, phone }) {
+        const timer = new Date();
+        const model = await this._findActualUser(user);
+
+        if (!model) {
+            throw errors.E404.error;
+        }
+
+        model.phone = phone;
+        await model.save();
+
+        stats.timing('sms_form_user_change_phone', new Date() - timer);
     }
 
     async verify(phone) {
@@ -66,7 +88,7 @@ class SmsFromUser extends AbstractSms {
             // do nothing, notify late
         }
 
-        stats.timing('sms_to_user_verify', new Date() - timer);
+        stats.timing('sms_from_user_verify', new Date() - timer);
     }
 
     async subscribeOnSmsGet({ channelId, phone }) {
