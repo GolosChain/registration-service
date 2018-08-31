@@ -18,6 +18,22 @@ class AbstractSms extends Abstract {
         await model.save();
     }
 
+    async toBlockChain({ model, ...keys }) {
+        if (this._isActual(model)) {
+            if (model.registered) {
+                throw { code: 409, message: 'User already registered, just wait blockchain sync.' };
+            }
+
+            if (!model.isPhoneVerified) {
+                return { currentState: 'verify' };
+            }
+        } else {
+            throw errors.E404.error;
+        }
+
+        await this._registerInBlockChain(model.user, { ...keys });
+    }
+
     _getLangBy(phone) {
         switch (true) {
             case /^\+7|^\+380|^\+375/.test(phone):

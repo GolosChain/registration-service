@@ -54,22 +54,6 @@ class SmsFromUser extends AbstractSms {
         throw errors.E406.error;
     }
 
-    async toBlockChain({ model, ...keys }) {
-        if (this._isActual(model)) {
-            if (model.registered) {
-                throw { code: 409, message: 'User already registered, just wait blockchain sync.' };
-            }
-
-            if (!model.isPhoneVerified) {
-                return { currentState: 'verify' };
-            }
-        } else {
-            throw errors.E404.error;
-        }
-
-        await this._registerInBlockChain(model.user, { ...keys });
-    }
-
     async _handleSms(phone) {
         const timer = new Date();
         const model = await User.findOne({ strategy: 'smsFromUser', phone });
