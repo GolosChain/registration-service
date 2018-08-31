@@ -1,16 +1,15 @@
 const core = require('gls-core-service');
 const Template = core.Template;
 
-// TODO Update locales
 module.exports = Template.makeFor({
     sms: {
         activationCode: {
-            en: 'test code ${code}',
-            ru: 'test code ${code}',
+            ru: 'Ваш код подтверждения Golos.io ${code}',
+            en: 'Your Golos.io verification code is ${code}',
         },
         successVerification: {
-            en: 'done code ${user}',
-            ru: 'done code ${user}',
+            ru: 'Спасибо, ваш номер подтвержден. Продолжите регистрацию.',
+            en: 'Thank you, your number is successfully confirmed. Please, continue the registration.',
         },
     },
 });

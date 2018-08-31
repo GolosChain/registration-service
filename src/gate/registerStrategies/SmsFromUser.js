@@ -98,7 +98,7 @@ class SmsFromUser extends AbstractSms {
 
     async _notifyUserMobileAboutPhoneVerified(user, phone) {
         const lang = this._getLangBy(phone);
-        const message = locale.sms.successVerification[lang]({ user });
+        const message = locale.sms.successVerification[lang]();
 
         await this._smsGate.sendTo(phone, message);
     }
