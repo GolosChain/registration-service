@@ -15,16 +15,10 @@ class SmsFromUser extends AbstractSms {
     }
 
     async register({ user, phone, mail }, recentModel) {
-        if (recentModel && this._isActual(recentModel)) {
-            if (recentModel.registered) {
-                throw { code: 409, message: 'User already registered, just wait blockchain sync.' };
-            }
+        const recentState = this._handleRecentModel(recentModel);
 
-            if (recentModel.isPhoneVerified) {
-                return { currentState: 'toBlockChain' };
-            } else {
-                return { currentState: 'verify' };
-            }
+        if (recentState) {
+            return recentState;
         }
 
         await this._throwIfPhoneDuplicate(user, phone);
@@ -35,18 +29,6 @@ class SmsFromUser extends AbstractSms {
             await model.save();
         } catch (error) {
             throw { code: 400, message: error.message };
-        }
-    }
-
-    async _throwIfPhoneDuplicate(user, phone) {
-        const model = await User.findOne({ strategy: 'smsFromUser', phone });
-
-        if (!model) {
-            return;
-        }
-
-        if (this._isActual(model) || model.registered) {
-            throw { code: 409, message: 'Phone already registered.' };
         }
     }
 
