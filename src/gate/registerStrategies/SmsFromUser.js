@@ -1,6 +1,6 @@
 const core = require('gls-core-service');
-const stats = core.Stats.client;
-const errors = core.HttpError;
+const errors = core.httpError;
+const stats = core.statsClient;
 const locale = require('../../locale');
 const AbstractSms = require('./AbstractSms');
 const User = require('../../models/User');
@@ -9,81 +9,72 @@ class SmsFromUser extends AbstractSms {
     constructor(smsGate) {
         super();
 
-        smsGate.on('incoming', this.verify.bind(this));
+        smsGate.on('incoming', this._handleSms.bind(this));
 
         this._subscribes = new Map();
     }
 
-    async register({ user, phone, mail }) {
-        const timer = new Date();
-        let model = await User.findOne({ phone });
+    async register({ user, phone, mail }, recentModel) {
+        if (recentModel && this._isActual(recentModel)) {
+            if (recentModel.registered) {
+                throw { code: 409, message: 'User already registered, just wait blockchain sync.' };
+            }
 
-        if (model) {
-            throw { code: 409, message: 'Phone is already used.' };
-        }
-
-        model = await this._findActualUser(user);
-
-        if (model) {
-            if (model.isPhoneVerified) {
-                return { state: 'toBlockChain' };
+            if (recentModel.isPhoneVerified) {
+                return { currentState: 'toBlockChain' };
             } else {
-                return { state: 'verify' };
+                return { currentState: 'verify' };
             }
         }
 
-        model = new User({ user, phone, mail, registrationStrategy: 'smsFromUser' });
+        const model = new User({ user, phone, mail, strategy: 'smsFromUser' });
 
         try {
             await model.save();
         } catch (error) {
             throw { code: 400, message: error.message };
         }
-
-        stats.timing('sms_from_user_first_step', new Date() - timer);
-
-        return { strategy: 'smsFromUser' };
     }
 
-    async changePhone({ user, phone }) {
-        const timer = new Date();
-        const model = await this._findActualUser(user);
+    async verify() {
+        throw errors.E406.error;
+    }
 
-        if (!model) {
+    async toBlockChain({ model, ...keys }) {
+        if (this._isActual(model)) {
+            if (model.registered) {
+                throw { code: 409, message: 'User already registered, just wait blockchain sync.' };
+            }
+
+            if (!model.isPhoneVerified) {
+                return { currentState: 'verify' };
+            }
+        } else {
             throw errors.E404.error;
         }
 
-        model.phone = phone;
-        await model.save();
-
-        stats.timing('sms_form_user_change_phone', new Date() - timer);
+        await this._registerInBlockChain(model.user, { ...keys });
     }
 
-    async verify(phone) {
+    async _handleSms(phone) {
         const timer = new Date();
-        const query = this._addExpirationEdge({ phone, registrationStrategy: 'smsFromUser' });
-        const model = await User.findOne(query);
+        const model = await User.findOne({ strategy: 'smsFromUser', phone });
 
-        if (!model) {
+        if (!model || !this._isActual(model)) {
+            return;
+        }
+
+        if (model.isPhoneVerified) {
             return;
         }
 
         model.isPhoneVerified = true;
         await model.save();
 
-        const lang = this._getLangBy(phone);
-        const message = locale.sms.successVerification[lang]({ user: model.user });
-
-        await this._smsGate.sendTo(phone, message);
+        await this._notifyUserMobileAboutPhoneVerified(model.user, phone);
 
         try {
-            const channelId = this._subscribes.get(phone);
-
-            await this.sendTo('facade', 'transfer', {
-                channelId,
-                method: 'registration.phoneVerified',
-                result: { status: 'OK' },
-            });
+            await this._notifyFrontendAboutPhoneVerified(phone);
         } catch (error) {
             // do nothing, notify late
         }
@@ -91,22 +82,29 @@ class SmsFromUser extends AbstractSms {
         stats.timing('sms_from_user_verify', new Date() - timer);
     }
 
-    async subscribeOnSmsGet({ channelId, phone }) {
-        this._subscribes.set(phone, channelId);
+    async _notifyUserMobileAboutPhoneVerified(user, phone) {
+        const lang = this._getLangBy(phone);
+        const message = locale.sms.successVerification[lang]({ user });
+
+        await this._smsGate.sendTo(phone, message);
     }
 
-    async toBlockChain(user, keys) {
-        const model = this._findActualUser(user);
+    async _notifyFrontendAboutPhoneVerified(phone) {
+        const channelId = this._subscribes.get(phone);
 
-        if (!model || model.registrationStrategy !== 'smsFromUser') {
-            throw errors.E404.error;
+        if (!channelId) {
+            return;
         }
 
-        if (!model.isPhoneVerified) {
-            throw errors.E400.error;
-        }
+        await this.sendTo('facade', 'transfer', {
+            channelId,
+            method: 'registration.phoneVerified',
+            result: { status: 'OK' },
+        });
+    }
 
-        await this._registerInBlockChain(user, keys);
+    async subscribeOnSmsGet({ channelId, phone }) {
+        this._subscribes.set(phone, channelId);
     }
 }
 

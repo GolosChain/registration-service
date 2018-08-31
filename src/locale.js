@@ -9,8 +9,8 @@ module.exports = Template.makeFor({
             ru: 'test code ${code}',
         },
         successVerification: {
-            en: 'done code',
-            ru: 'done code',
+            en: 'done code ${user}',
+            ru: 'done code ${user}',
         },
     },
 });

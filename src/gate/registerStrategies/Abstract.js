@@ -1,9 +1,7 @@
 const golos = require('golos-js');
 const core = require('gls-core-service');
 const BlockChainValues = core.utils.BlockChainValues;
-const Moments = core.Moments;
 const env = require('../../env');
-const User = require('../../models/User');
 
 class Abstract {
     async register() {
@@ -11,6 +9,10 @@ class Abstract {
     }
 
     async verify() {
+        throw 'Not implemented';
+    }
+
+    async toBlockChain() {
         throw 'Not implemented';
     }
 
@@ -44,21 +46,6 @@ class Abstract {
             account_auths: [],
             key_auths: [[key, 1]],
         };
-    }
-
-    async _findActualUser(user) {
-        const query = this._addExpirationEdge({ user });
-
-        return await User.findOne(query);
-    }
-
-    _addExpirationEdge(query) {
-        const expirationValue = env.GLS_SMS_VERIFY_EXPIRATION_HOURS;
-        const expirationEdge = Moments.ago(expirationValue * 60 * 60 * 1000);
-
-        query.createdAt = { $gt: expirationEdge };
-
-        return query;
     }
 }
 

@@ -1,9 +1,9 @@
 const golos = require('golos-js');
 const request = require('request-promise-native');
 const core = require('gls-core-service');
-const Gate = core.service.Gate;
-const errors = core.HttpError;
-const stats = core.Stats.client;
+const Gate = core.services.Gate;
+const errors = core.httpError;
+const stats = core.statsClient;
 const env = require('../env');
 const SocialStrategy = require('./registerStrategies/Social');
 const MailStrategy = require('./registerStrategies/Mail');
@@ -51,8 +51,9 @@ class Router extends Gate {
 
         const strategy = await this._choiceStrategy();
         const handler = this._strategies[strategy];
+        const recentModel = await this._getUserModel(user);
 
-        await handler.firstStep({ user, phone, mail });
+        await handler.firstStep({ user, phone, mail }, recentModel);
         stats.timing('registration_first_step', new Date() - timer);
     }
 
@@ -142,13 +143,17 @@ class Router extends Gate {
     }
 
     async _getUserModelOrThrow(user) {
-        const model = await User.findOne({ user }, {}, { sort: { _id: -1 } });
+        const model = await this._getUserModel(user);
 
         if (!model) {
             throw errors.E404.error;
         }
 
         return model;
+    }
+
+    async _getUserModel(user) {
+        return await User.findOne({ user }, {}, { sort: { _id: -1 } });
     }
 
     _onlyStrategies(model, strategies) {
