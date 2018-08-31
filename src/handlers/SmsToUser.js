@@ -47,7 +47,7 @@ class SmsToUser extends AbstractSms {
         model.smsCodeDate = new Date();
         await model.save();
 
-        await this._smsGate.sendTo(phone, message);
+        await this._smsGate.sendTo(phone, message, lang);
     }
 
     async verify({ model, code }) {

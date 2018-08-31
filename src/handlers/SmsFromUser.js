@@ -66,7 +66,7 @@ class SmsFromUser extends AbstractSms {
         const lang = this._getLangBy(phone);
         const message = locale.sms.successVerification[lang]();
 
-        await this._smsGate.sendTo(phone, message);
+        await this._smsGate.sendTo(phone, message, lang);
     }
 
     async _notifyFrontendAboutPhoneVerified(phone) {
