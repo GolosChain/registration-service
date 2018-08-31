@@ -120,15 +120,6 @@ class SmsFromUser extends AbstractSms {
     async subscribeOnSmsGet({ channelId, phone }) {
         this._subscribes.set(phone, channelId);
     }
-
-    async changePhone({ model, phone }) {
-        if (this._isActual(model)) {
-            throw errors.E404.error;
-        }
-
-        model.phone = phone;
-        await model.save();
-    }
 }
 
 module.exports = SmsFromUser;
