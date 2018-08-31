@@ -10,7 +10,7 @@ module.exports = MongoDB.makeModel(
             minLength: 2,
             maxLength: 100,
         },
-        registrationStrategy: {
+        strategy: {
             type: String,
             enum: ['smsToUser', 'smsFromUser', 'email', 'social'],
             required: true,

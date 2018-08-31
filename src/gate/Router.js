@@ -4,12 +4,12 @@ const core = require('gls-core-service');
 const Gate = core.service.Gate;
 const errors = core.HttpError;
 const stats = core.Stats.client;
-const Logger = core.Logger;
 const env = require('../env');
 const SocialStrategy = require('./registerStrategies/Social');
 const MailStrategy = require('./registerStrategies/Mail');
 const SmsToUserStrategy = require('./registerStrategies/SmsToUser');
 const SmsFromUserStrategy = require('./registerStrategies/SmsFromUser');
+const User = require('../models/User');
 
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
 
@@ -17,18 +17,17 @@ class Router extends Gate {
     constructor(smsGate) {
         super();
 
-        this._strategyMap = {
+        this._strategies = {
             social: new SocialStrategy(),
             mail: new MailStrategy(),
             smsToUser: new SmsToUserStrategy(smsGate),
             smsFromUser: new SmsFromUserStrategy(smsGate),
         };
+
+        this._strategyInc = 0;
     }
 
     async start() {
-        const smsToUser = this._strategyMap['smsToUser'];
-        const smsFromUser = this._strategyMap['smsFromUser'];
-
         await super.start({
             serverRoutes: {
                 // step api
@@ -38,15 +37,23 @@ class Router extends Gate {
 
                 // strategy-specific api
                 changePhone: this._changePhone.bind(this),
-                resendSmsCode: smsToUser.resendCode.bind(smsToUser),
-                subscribeOnSmsGet: smsFromUser.subscribeOnSmsGet.bind(smsFromUser),
+                resendSmsCode: this._resendSmsCode.bind(this),
+                subscribeOnSmsGet: this._subscribeOnSmsGet.bind(this),
             },
         });
     }
 
-    async _firstStep({ captcha, ...data }) {
+    async _firstStep({ captcha, user, phone, mail }) {
+        const timer = new Date();
+
+        await this._throwIfUserInBlockChain(user);
         await this._checkCaptcha(captcha);
-        return await this._callRegisterStrategy(data);
+
+        const strategy = await this._choiceStrategy();
+        const handler = this._strategies[strategy];
+
+        await handler.firstStep({ user, phone, mail });
+        stats.timing('registration_first_step', new Date() - timer);
     }
 
     async _checkCaptcha(captcha) {
@@ -60,57 +67,94 @@ class Router extends Gate {
             },
         });
 
-        // TODO -
+        // TODO Remove false when frontend done
         if (false && result.success !== true) {
             throw errors.E403.error;
         }
     }
 
-    async _callRegisterStrategy({ user, phone, mail }) {
+    async _choiceStrategy() {
+        // TODO More effective choicer with Google Analyst
+        const strategies = ['smsFromUser', 'smsToUser'];
+        const choice = strategies[this._strategyInc % 2];
+
+        this._strategyInc++;
+
+        return choice;
+    }
+
+    async _verify({ user, ...data }) {
+        const timer = new Date();
+
         await this._throwIfUserInBlockChain(user);
 
-        const target = this._strategyMap[this._getCurrentStrategy()];
+        const model = await this._getUserModelOrThrow(user);
 
-        if (!target) {
-            stats.increment('invalid_generated_strategy');
-            Logger.error('Invalid generated strategy');
-            process.exit(1);
-        }
-
-        return await target.register({ user, phone, mail });
+        this._strategies[model.strategy].verify({ model, ...data });
+        stats.timing('registration_verify', new Date() - timer);
     }
 
-    async _verify(data) {
-        // TODO -
-    }
+    async _toBlockChain({ user, ...keys }) {
+        const timer = new Date();
 
-    async _toBlockChain({ user, keys, strategy }) {
         await this._throwIfUserInBlockChain(user);
 
-        const target = this._strategyMap[strategy];
+        const model = await this._getUserModelOrThrow(user);
 
-        if (!target) {
-            throw errors.E400.error;
-        }
-
-        target.toBlockChain(user, keys);
+        this._strategies[model.strategy].toBlockChain({ model, ...keys });
+        stats.timing('registration_to_blockchain', new Date() - timer);
     }
 
-    _getCurrentStrategy() {
-        // TODO Dynamic calculation
-        return 'smsFromUser';
-    }
+    async _changePhone({ user, phone }) {
+        const timer = new Date();
 
-    async _changePhone({ user, phone, strategy }) {
         await this._throwIfUserInBlockChain(user);
 
-        const target = this._strategyMap[strategy];
+        const model = await this._getUserModelOrThrow(user);
 
-        if (!target || !['smsFromUser', 'smsToUser'].includes(target)) {
-            throw errors.E400.error;
+        this._onlyStrategies(model, ['smsFromUser', 'smsToUser']);
+        this._strategies[model.strategy].changePhone({ user, phone });
+        stats.timing('registration_change_phone', new Date() - timer);
+    }
+
+    async _resendSmsCode({ user, phone }) {
+        const timer = new Date();
+
+        await this._throwIfUserInBlockChain(user);
+
+        const model = await this._getUserModelOrThrow(user);
+
+        this._onlyStrategies(model, ['smsToUser']);
+        this._strategies[model.strategy].resendSmsCode({ user, phone });
+        stats.timing('registration_resend_sms_code', new Date() - timer);
+    }
+
+    async _subscribeOnSmsGet({ user, phone, channelId }) {
+        const timer = new Date();
+
+        await this._throwIfUserInBlockChain(user);
+
+        const model = await this._getUserModelOrThrow(user);
+
+        this._onlyStrategies(model, ['smsToUser']);
+        this._strategies[model.strategy].resendSmsCode({ user, phone, channelId });
+        stats.timing('registration_subscribe_on_sms_get', new Date() - timer);
+    }
+
+    async _getUserModelOrThrow(user) {
+        const model = await User.findOne({ user }, {}, { sort: { _id: -1 } });
+
+        if (!model) {
+            throw errors.E404.error;
         }
 
-        target.changePhone({ user, phone });
+        return model;
+    }
+
+    _onlyStrategies(model, strategies) {
+        if (!strategies.includes(model.strategy)) {
+            throw errors.E406.error;
+        }
     }
 
     async _throwIfUserInBlockChain(user) {
