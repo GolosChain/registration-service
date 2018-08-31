@@ -137,8 +137,8 @@ class Router extends Gate {
 
         const model = await this._getUserModelOrThrow(user);
 
-        this._onlyStrategies(model, ['smsToUser']);
-        this._strategies[model.strategy].resendSmsCode({ user, phone, channelId });
+        this._onlyStrategies(model, ['smsFromUser']);
+        this._strategies[model.strategy].subscribeOnSmsGet({ user, phone, channelId });
         stats.timing('registration_subscribe_on_sms_get', new Date() - timer);
     }
 

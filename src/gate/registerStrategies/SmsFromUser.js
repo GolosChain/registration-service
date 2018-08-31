@@ -27,12 +27,26 @@ class SmsFromUser extends AbstractSms {
             }
         }
 
+        await this._throwIfPhoneDuplicate(user, phone);
+
         const model = new User({ user, phone, mail, strategy: 'smsFromUser' });
 
         try {
             await model.save();
         } catch (error) {
             throw { code: 400, message: error.message };
+        }
+    }
+
+    async _throwIfPhoneDuplicate(user, phone) {
+        const model = await User.findOne({ strategy: 'smsFromUser', phone });
+
+        if (!model) {
+            return;
+        }
+
+        if (this._isActual(model) || model.registered) {
+            throw { code: 409, message: 'Phone already registered.' };
         }
     }
 
@@ -105,6 +119,15 @@ class SmsFromUser extends AbstractSms {
 
     async subscribeOnSmsGet({ channelId, phone }) {
         this._subscribes.set(phone, channelId);
+    }
+
+    async changePhone({ model, phone }) {
+        if (this._isActual(model)) {
+            throw errors.E404.error;
+        }
+
+        model.phone = phone;
+        await model.save();
     }
 }
 
