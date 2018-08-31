@@ -46,6 +46,7 @@ services:
       - GLS_SMS_GATE_SECRET_SID
       - GLS_TWILIO_SECRET
       - GLS_TWILIO_PHONE_FROM
+      - GLS_SMSC_SENDER_NAME
 
 volumes:
   mongodb_vol:

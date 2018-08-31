@@ -125,10 +125,11 @@ class SmsGate extends BasicService {
             case 'ru':
                 const login = env.GLS_SMS_GATE_LOGIN;
                 const pass = env.GLS_SMS_GATE_PASS;
+                const sender = env.GLS_SMSC_SENDER_NAME;
                 const point = 'https://smsc.ru/sys/send.php';
 
                 await request.get(
-                    `${point}?login=${login}&psw=${pass}&phones=${phone}&mes=${message}`
+                    `${point}?login=${login}&psw=${pass}&phones=${phone}&mes=${message}&sender=${sender}`
                 );
                 break;
 
