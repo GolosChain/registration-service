@@ -1,33 +1,21 @@
 const core = require('gls-core-service');
+const stats = core.statsClient;
+const BasicMain = core.services.BasicMain;
+const MongoDB = core.services.MongoDB;
 const env = require('./env');
-const stats = core.Stats.client;
-const BasicService = core.service.Basic;
-const MongoDB = core.service.MongoDB;
-const Router = require('./gate/Router');
+const Gate = require('./services/Gate');
 const SmsGate = require('./services/SmsGate');
 
-class Main extends BasicService {
+class Main extends BasicMain {
     constructor() {
-        super();
+        super(stats);
 
         const mongoDb = new MongoDB();
         const smsGate = new SmsGate();
-        const router = new Router(smsGate);
+        const gate = new Gate(smsGate);
 
         this.printEnvBasedConfig(env);
-        this.addNested(mongoDb, smsGate, router);
-        this.stopOnExit();
-    }
-
-    async start() {
-        await this.startNested();
-        stats.increment('main_service_start');
-    }
-
-    async stop() {
-        await this.stopNested();
-        stats.increment('main_service_stop');
-        process.exit(0);
+        this.addNested(mongoDb, smsGate, gate);
     }
 }
 

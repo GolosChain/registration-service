@@ -1,19 +1,19 @@
 const golos = require('golos-js');
 const request = require('request-promise-native');
 const core = require('gls-core-service');
-const Gate = core.services.Gate;
+const GateService = core.services.Gate;
 const errors = core.httpError;
 const stats = core.statsClient;
 const env = require('../env');
-const SocialStrategy = require('./registerStrategies/Social');
-const MailStrategy = require('./registerStrategies/Mail');
-const SmsToUserStrategy = require('./registerStrategies/SmsToUser');
-const SmsFromUserStrategy = require('./registerStrategies/SmsFromUser');
+const SocialStrategy = require('../handlers/Social');
+const MailStrategy = require('../handlers/Mail');
+const SmsToUserStrategy = require('../handlers/SmsToUser');
+const SmsFromUserStrategy = require('../handlers/SmsFromUser');
 const User = require('../models/User');
 
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
 
-class Router extends Gate {
+class Gate extends GateService {
     constructor(smsGate) {
         super();
 
@@ -171,4 +171,4 @@ class Router extends Gate {
     }
 }
 
-module.exports = Router;
+module.exports = Gate;

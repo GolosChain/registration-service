@@ -2,10 +2,10 @@ const random = require('random');
 const core = require('gls-core-service');
 const stats = core.statsClient;
 const errors = core.httpError;
-const locale = require('../../locale');
-const env = require('../../env');
+const locale = require('../locale');
+const env = require('../env');
 const AbstractSms = require('./AbstractSms');
-const User = require('../../models/User');
+const User = require('../models/User');
 
 class SmsToUser extends AbstractSms {
     constructor(smsGate) {

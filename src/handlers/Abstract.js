@@ -1,7 +1,7 @@
 const golos = require('golos-js');
 const core = require('gls-core-service');
 const BlockChainValues = core.utils.BlockChainValues;
-const env = require('../../env');
+const env = require('../env');
 
 class Abstract {
     async register() {

@@ -1,9 +1,9 @@
 const core = require('gls-core-service');
 const errors = core.httpError;
 const stats = core.statsClient;
-const locale = require('../../locale');
+const locale = require('../locale');
 const AbstractSms = require('./AbstractSms');
-const User = require('../../models/User');
+const User = require('../models/User');
 
 class SmsFromUser extends AbstractSms {
     constructor(smsGate) {

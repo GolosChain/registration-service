@@ -2,8 +2,8 @@ const core = require('gls-core-service');
 const Moments = core.utils.Moments;
 const errors = core.httpError;
 const Abstract = require('./Abstract');
-const env = require('../../env');
-const User = require('../../models/User');
+const env = require('../env');
+const User = require('../models/User');
 
 class AbstractSms extends Abstract {
     async changePhone({ model, phone }) {
