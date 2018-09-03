@@ -19,7 +19,7 @@ class AbstractSms extends Abstract {
             return { currentState: 'toBlockChain' };
         }
 
-        return { currentState: 'verify' };
+        return { currentState: 'verify', strategy: recentModel.strategy };
     }
 
     async changePhone({ model, phone }) {
