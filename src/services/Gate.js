@@ -32,6 +32,7 @@ class Gate extends GateService {
         await super.start({
             serverRoutes: {
                 // step api
+                getState: this._getState.bind(this),
                 firstStep: this._firstStep.bind(this),
                 verify: this._verify.bind(this),
                 toBlockChain: this._toBlockChain.bind(this),
@@ -42,6 +43,25 @@ class Gate extends GateService {
                 subscribeOnSmsGet: this._subscribeOnSmsGet.bind(this),
             },
         });
+    }
+
+    async _getState({ user }) {
+        const timer = new Date();
+
+        if (await this._isUserInBlockChain(user)) {
+            return { currentState: 'registered' };
+        }
+
+        const recentModel = await this._getUserModel(user);
+
+        if (!recentModel) {
+            return { currentState: 'firstStep' };
+        }
+
+        const result = this._strategies[recentModel.strategy].getState(recentModel);
+
+        stats.timing('registration_get_state', new Date() - timer);
+        return result;
     }
 
     async _firstStep({ captcha, user, phone, mail }) {
@@ -157,7 +177,8 @@ class Gate extends GateService {
 
         this._onlyStrategies(model, ['smsFromUser']);
 
-        const result = this._strategies[model.strategy].subscribeOnSmsGet({ user, phone, channelId });
+        const target = this._strategies[model.strategy];
+        const result = target.subscribeOnSmsGet({ user, phone, channelId });
 
         stats.timing('registration_subscribe_on_sms_get', new Date() - timer);
         return result;
@@ -184,11 +205,15 @@ class Gate extends GateService {
     }
 
     async _throwIfUserInBlockChain(user) {
-        const accounts = await golos.api.getAccountsAsync([user]);
-
-        if (accounts.length) {
+        if (await this._isUserInBlockChain(user)) {
             throw { code: 409, message: 'User already in blockchain.' };
         }
+    }
+
+    async _isUserInBlockChain(user) {
+        const accounts = await golos.api.getAccountsAsync([user]);
+
+        return !!accounts.length;
     }
 }
 

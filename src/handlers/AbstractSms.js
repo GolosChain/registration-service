@@ -6,6 +6,22 @@ const env = require('../env');
 const User = require('../models/User');
 
 class AbstractSms extends Abstract {
+    async getState(recentModel) {
+        if (!this._isActual(recentModel)) {
+            return { currentState: 'firstStep' };
+        }
+
+        if (recentModel.registered) {
+            return { currentState: 'registered' };
+        }
+
+        if (recentModel.isPhoneVerified) {
+            return { currentState: 'toBlockChain' };
+        }
+
+        return { currentState: 'verify' };
+    }
+
     async changePhone({ model, phone }) {
         if (!this._isActual(model)) {
             throw errors.E404.error;

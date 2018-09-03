@@ -1,7 +1,11 @@
 const Abstract = require('./Abstract');
 
 class Social extends Abstract {
-    async register() {
+    async getState() {
+        throw { code: 501, message: 'Not implemented for this version' };
+    }
+
+    async firstStep() {
         throw { code: 501, message: 'Not implemented for this version' };
     }
 
