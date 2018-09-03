@@ -14,8 +14,8 @@ class SmsFromUser extends AbstractSms {
         this._subscribes = new Map();
     }
 
-    async register({ user, phone, mail }, recentModel) {
-        const recentState = this._handleRecentModel(recentModel);
+    async firstStep({ user, phone, mail }, recentModel) {
+        const recentState = this._handleRecentModel(recentModel, phone);
 
         if (recentState) {
             return recentState;
@@ -30,6 +30,8 @@ class SmsFromUser extends AbstractSms {
         } catch (error) {
             throw { code: 400, message: error.message };
         }
+
+        return { strategy: 'smsFromUser' };
     }
 
     async verify() {

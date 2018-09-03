@@ -4,6 +4,7 @@ const core = require('gls-core-service');
 const GateService = core.services.Gate;
 const errors = core.httpError;
 const stats = core.statsClient;
+const Logger = core.Logger;
 const env = require('../env');
 const SocialStrategy = require('../handlers/Social');
 const MailStrategy = require('../handlers/Mail');
@@ -52,24 +53,33 @@ class Gate extends GateService {
         const strategy = await this._choiceStrategy();
         const handler = this._strategies[strategy];
         const recentModel = await this._getUserModel(user);
+        const result = await handler.firstStep({ user, phone, mail }, recentModel);
 
-        await handler.firstStep({ user, phone, mail }, recentModel);
         stats.timing('registration_first_step', new Date() - timer);
+        return result;
     }
 
     async _checkCaptcha(captcha) {
-        const result = await request({
+        const rawResult = await request({
             method: 'POST',
             uri: GOOGLE_CAPTCHA_API,
-            json: true,
-            body: {
+            form: {
                 secret: env.GLS_GOOGLE_CAPTCHA_SECRET,
                 response: captcha,
             },
         });
 
-        // TODO Remove false when frontend done
-        if (false && result.success !== true) {
+        let result;
+
+        try {
+            result = JSON.parse(rawResult);
+        } catch (error) {
+            Logger.error('Google invalid response');
+            stats.increment('google_invalid_response');
+            throw error.E500.error;
+        }
+
+        if (result.success !== true) {
             throw errors.E403.error;
         }
     }
@@ -90,9 +100,10 @@ class Gate extends GateService {
         await this._throwIfUserInBlockChain(user);
 
         const model = await this._getUserModelOrThrow(user);
+        const result = this._strategies[model.strategy].verify({ model, ...data });
 
-        this._strategies[model.strategy].verify({ model, ...data });
         stats.timing('registration_verify', new Date() - timer);
+        return result;
     }
 
     async _toBlockChain({ user, ...keys }) {
@@ -101,9 +112,10 @@ class Gate extends GateService {
         await this._throwIfUserInBlockChain(user);
 
         const model = await this._getUserModelOrThrow(user);
+        const result = this._strategies[model.strategy].toBlockChain({ model, ...keys });
 
-        this._strategies[model.strategy].toBlockChain({ model, ...keys });
         stats.timing('registration_to_blockchain', new Date() - timer);
+        return result;
     }
 
     async _changePhone({ user, phone }) {
@@ -114,8 +126,11 @@ class Gate extends GateService {
         const model = await this._getUserModelOrThrow(user);
 
         this._onlyStrategies(model, ['smsFromUser', 'smsToUser']);
-        this._strategies[model.strategy].changePhone({ user, phone });
+
+        const result = this._strategies[model.strategy].changePhone({ user, phone });
+
         stats.timing('registration_change_phone', new Date() - timer);
+        return result;
     }
 
     async _resendSmsCode({ user, phone }) {
@@ -126,8 +141,11 @@ class Gate extends GateService {
         const model = await this._getUserModelOrThrow(user);
 
         this._onlyStrategies(model, ['smsToUser']);
-        this._strategies[model.strategy].resendSmsCode({ user, phone });
+
+        const result = this._strategies[model.strategy].resendSmsCode({ user, phone });
+
         stats.timing('registration_resend_sms_code', new Date() - timer);
+        return result;
     }
 
     async _subscribeOnSmsGet({ user, phone, channelId }) {
@@ -138,8 +156,11 @@ class Gate extends GateService {
         const model = await this._getUserModelOrThrow(user);
 
         this._onlyStrategies(model, ['smsFromUser']);
-        this._strategies[model.strategy].subscribeOnSmsGet({ user, phone, channelId });
+
+        const result = this._strategies[model.strategy].subscribeOnSmsGet({ user, phone, channelId });
+
         stats.timing('registration_subscribe_on_sms_get', new Date() - timer);
+        return result;
     }
 
     async _getUserModelOrThrow(user) {

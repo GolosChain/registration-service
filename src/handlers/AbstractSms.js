@@ -35,16 +35,20 @@ class AbstractSms extends Abstract {
         await this._registerInBlockChain(model.user, { ...keys });
     }
 
-    _handleRecentModel(recentModel) {
+    _handleRecentModel(recentModel, phone) {
         if (recentModel && this._isActual(recentModel)) {
             if (recentModel.registered) {
                 throw { code: 409, message: 'User already registered, just wait blockchain sync.' };
             }
 
+            if (recentModel.phone !== phone) {
+                throw { code: 409, message: 'Account already registered.' };
+            }
+
             if (recentModel.isPhoneVerified) {
-                return { currentState: 'toBlockChain' };
+                return { currentState: 'toBlockChain', strategy: recentModel.strategy };
             } else {
-                return { currentState: 'verify' };
+                return { currentState: 'verify', strategy: recentModel.strategy };
             }
         }
     }

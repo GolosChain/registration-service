@@ -4,7 +4,7 @@ const BlockChainValues = core.utils.BlockChainValues;
 const env = require('../env');
 
 class Abstract {
-    async register() {
+    async firstStep() {
         throw 'Not implemented';
     }
 

@@ -14,8 +14,8 @@ class SmsToUser extends AbstractSms {
         this._smsGate = smsGate;
     }
 
-    async register({ user, phone, mail }, recentModel) {
-        const recentState = this._handleRecentModel(recentModel);
+    async firstStep({ user, phone, mail }, recentModel) {
+        const recentState = this._handleRecentModel(recentModel, phone);
 
         if (recentState) {
             return recentState;
@@ -32,6 +32,8 @@ class SmsToUser extends AbstractSms {
         }
 
         await this._sendSmsCode(model, phone);
+
+        return { strategy: 'smsToUser' };
     }
 
     async _sendSmsCode(model, phone) {
