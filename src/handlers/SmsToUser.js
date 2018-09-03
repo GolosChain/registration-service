@@ -1,6 +1,7 @@
 const random = require('random');
 const core = require('gls-core-service');
 const stats = core.statsClient;
+const Logger = core.Logger;
 const errors = core.httpError;
 const locale = require('../locale');
 const env = require('../env');
@@ -31,7 +32,12 @@ class SmsToUser extends AbstractSms {
             throw { code: 400, message: error.message };
         }
 
-        await this._sendSmsCode(model, phone);
+        process.nextTick(() => {
+            this._sendSmsCode(model, phone).catch(error => {
+                stats.increment('send_sms_code_error');
+                Logger.error(`Send sms code error - ${error}`);
+            });
+        });
 
         return { strategy: 'smsToUser' };
     }

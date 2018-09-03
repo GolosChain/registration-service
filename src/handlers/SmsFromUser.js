@@ -1,6 +1,7 @@
 const core = require('gls-core-service');
 const errors = core.httpError;
 const stats = core.statsClient;
+const Logger = core.Logger;
 const locale = require('../locale');
 const AbstractSms = require('./AbstractSms');
 const User = require('../models/User');
@@ -65,10 +66,15 @@ class SmsFromUser extends AbstractSms {
     }
 
     async _notifyUserMobileAboutPhoneVerified(user, phone) {
-        const lang = this._getLangBy(phone);
-        const message = locale.sms.successVerification[lang]();
+        process.nextTick(() => {
+            const lang = this._getLangBy(phone);
+            const message = locale.sms.successVerification[lang]();
 
-        await this._smsGate.sendTo(phone, message, lang);
+            this._smsGate.sendTo(phone, message, lang).catch(error => {
+                stats.increment('send_success_sms_error');
+                Logger.error(`Send success sms error - ${error}`);
+            });
+        });
     }
 
     async _notifyFrontendAboutPhoneVerified(phone) {
