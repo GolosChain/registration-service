@@ -42,6 +42,9 @@ class Gate extends GateService {
                 resendSmsCode: this._resendSmsCode.bind(this),
                 subscribeOnSmsGet: this._subscribeOnSmsGet.bind(this),
             },
+            requiredClients: {
+                facade: env.GLS_FACADE_CONNECT,
+            }
         });
     }
 

@@ -47,6 +47,7 @@ services:
       - GLS_TWILIO_SECRET
       - GLS_TWILIO_PHONE_FROM
       - GLS_SMSC_SENDER_NAME
+      - GLS_FACADE_CONNECT
 
 volumes:
   mongodb_vol:
