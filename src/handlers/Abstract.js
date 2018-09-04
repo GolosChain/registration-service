@@ -4,6 +4,10 @@ const BlockChainValues = core.utils.BlockChainValues;
 const env = require('../env');
 
 class Abstract {
+    constructor(gate) {
+        this._gate = gate;
+    }
+
     async getState() {
         throw 'Not implemented';
     }

@@ -7,8 +7,8 @@ const AbstractSms = require('./AbstractSms');
 const User = require('../models/User');
 
 class SmsFromUser extends AbstractSms {
-    constructor(smsGate) {
-        super();
+    constructor(gate, smsGate) {
+        super(gate);
 
         this._smsGate = smsGate;
         this._smsGate.on('incoming', this._handleSms.bind(this));
@@ -84,7 +84,7 @@ class SmsFromUser extends AbstractSms {
             return;
         }
 
-        await this.sendTo('facade', 'transfer', {
+        await this._gate.sendTo('facade', 'transfer', {
             channelId,
             method: 'registration.phoneVerified',
             result: { status: 'OK' },

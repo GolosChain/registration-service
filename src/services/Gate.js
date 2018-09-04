@@ -19,10 +19,10 @@ class Gate extends GateService {
         super();
 
         this._strategies = {
-            social: new SocialStrategy(),
-            mail: new MailStrategy(),
-            smsToUser: new SmsToUserStrategy(smsGate),
-            smsFromUser: new SmsFromUserStrategy(smsGate),
+            social: new SocialStrategy(this),
+            mail: new MailStrategy(this),
+            smsToUser: new SmsToUserStrategy(this, smsGate),
+            smsFromUser: new SmsFromUserStrategy(this, smsGate),
         };
 
         this._strategyInc = 0;
@@ -44,7 +44,7 @@ class Gate extends GateService {
             },
             requiredClients: {
                 facade: env.GLS_FACADE_CONNECT,
-            }
+            },
         });
     }
 
