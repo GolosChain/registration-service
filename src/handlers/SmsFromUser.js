@@ -97,6 +97,3 @@ class SmsFromUser extends AbstractSms {
 }
 
 module.exports = SmsFromUser;
-
-
-console.log(locale);
