@@ -32,7 +32,7 @@ class SmsToUser extends AbstractSms {
             throw { code: 400, message: error.message };
         }
 
-        process.nextTick(() => {
+        setImmediate(() => {
             this._sendSmsCode(model, phone).catch(error => {
                 stats.increment('send_sms_code_error');
                 Logger.error(`Send sms code error - ${error}`);

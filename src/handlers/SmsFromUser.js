@@ -41,7 +41,11 @@ class SmsFromUser extends AbstractSms {
 
     async _handleSms(phone) {
         const timer = new Date();
-        const model = await User.findOne({ strategy: 'smsFromUser', phone });
+        const model = await User.findOne(
+            { strategy: 'smsFromUser', phone },
+            {},
+            { sort: { _id: -1 } }
+        );
 
         if (!model || !this._isActual(model)) {
             return;
@@ -66,7 +70,7 @@ class SmsFromUser extends AbstractSms {
     }
 
     async _notifyUserMobileAboutPhoneVerified(user, phone) {
-        process.nextTick(() => {
+        setImmediate(() => {
             const lang = this._getLangBy(phone);
             const message = locale.sms.successVerification[lang]();
 
