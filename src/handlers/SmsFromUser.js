@@ -10,8 +10,8 @@ class SmsFromUser extends AbstractSms {
     constructor(smsGate) {
         super();
 
-        smsGate.on('incoming', this._handleSms.bind(this));
-
+        this._smsGate = smsGate;
+        this._smsGate.on('incoming', this._handleSms.bind(this));
         this._subscribes = new Map();
     }
 
