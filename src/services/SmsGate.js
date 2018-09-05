@@ -2,18 +2,18 @@ const R = require('ramda');
 const micro = require('micro');
 const bodyParser = require('urlencoded-body-parser');
 const core = require('gls-core-service');
-const request = require('request-promise-native');
 const BasicService = core.service.Basic;
 const Logger = core.Logger;
 const stats = core.statsClient;
 const errors = core.HttpError;
 const env = require('../env');
-const twilio = require('twilio')(env.GLS_SMS_GATE_SECRET_SID, env.GLS_TWILIO_SECRET);
 
 class SmsGate extends BasicService {
-    constructor() {
+    constructor(smsc, twilio) {
         super();
 
+        this._smsc = smsc;
+        this._twilio = twilio;
         this._server = null;
     }
 
@@ -123,20 +123,13 @@ class SmsGate extends BasicService {
     async sendTo(phone, message, targetLang) {
         switch (targetLang) {
             case 'ru':
-                const login = env.GLS_SMS_GATE_LOGIN;
-                const pass = env.GLS_SMS_GATE_PASS;
-                const sender = env.GLS_SMSC_SENDER_NAME;
-                const point = 'https://smsc.ru/sys/send.php';
-
-                await request.get(
-                    `${point}?login=${login}&psw=${pass}&phones=${phone}&mes=${message}&sender=${sender}`
-                );
+                await this._smsc.send(phone, message);
                 break;
 
             default:
                 const from = env.GLS_TWILIO_PHONE_FROM;
 
-                await twilio.messages.create({ from, body: message, to: phone });
+                await this._twilio.messages.create({ from, body: message, to: phone });
         }
     }
 }
