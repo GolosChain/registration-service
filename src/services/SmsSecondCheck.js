@@ -15,43 +15,58 @@ class SmsSecondCheck extends BasicService {
     }
 
     async iteration() {
-        const history = await this._extractSmsHistory();
+        const history = await this._extractPhonesHistory();
         const filtrated = await this._filtrateHistoryByModels(history);
 
         await this._notifyAboutVerified(filtrated);
     }
 
-    async _extractSmsHistory() {
-        let smsc = {};
-        let twilio = {};
+    async _extractPhonesHistory() {
+        let smsc = [];
+        let twilio = [];
 
         try {
-            smsc = await this._extractSmsHistoryFromSMSC();
+            smsc = await this._extractPhonesHistoryFromSMSC();
         } catch (error) {
             Logger.error(`Get history from SMSC - ${error}`);
             stats.increment('get_history_from_smsc_error');
         }
 
         try {
-            twilio = await this._extractSmsHistoryFromTWILIO();
+            twilio = await this._extractPhonesHistoryFromTWILIO();
         } catch (error) {
             Logger.error(`Get history from TWILIO - ${error}`);
             stats.increment('get_history_from_twilio_error');
         }
 
-        return Object.assign({}, smsc, twilio);
+        return [].push(...smsc, ...twilio);
     }
 
-    async _extractSmsHistoryFromSMSC() {
+    async _extractPhonesHistoryFromSMSC() {
         // TODO -
     }
 
-    async _extractSmsHistoryFromTWILIO() {
-        // TODO -
+    async _extractPhonesHistoryFromTWILIO() {
+        // TODO Implement TWILIO
+        return [];
     }
 
     async _filtrateHistoryByModels(history) {
-        // TODO -
+        const result = [];
+
+        for (let phone of history) {
+            const count = await User.countDocuments({
+                strategy: 'smsFromUser',
+                phone,
+                isPhoneVerified: false,
+            });
+
+            if (count) {
+                result.push(phone);
+            }
+        }
+
+        return result;
     }
 
     async _notifyAboutVerified(history) {
