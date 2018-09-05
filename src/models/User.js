@@ -92,7 +92,7 @@ module.exports = MongoDB.makeModel(
             // Strategy - smsFromUser
             {
                 fields: {
-                    registrationStrategy: 1,
+                    strategy: 1,
                     phone: 1,
                 },
                 options: {
