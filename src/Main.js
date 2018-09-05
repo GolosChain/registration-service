@@ -17,7 +17,7 @@ class Main extends BasicMain {
         const gate = new Gate(smsGate, smsSecondCheck);
 
         this.printEnvBasedConfig(env);
-        this.addNested(mongoDb, smsGate, gate);
+        this.addNested(mongoDb, smsGate, gate, smsSecondCheck);
     }
 }
 

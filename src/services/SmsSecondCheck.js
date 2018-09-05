@@ -42,7 +42,7 @@ class SmsSecondCheck extends BasicService {
             stats.increment('get_history_from_twilio_error');
         }
 
-        return [].push(...smsc, ...twilio);
+        return [].concat(smsc, twilio);
     }
 
     async _extractPhonesHistoryFromSMSC() {
