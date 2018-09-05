@@ -7,12 +7,14 @@ const AbstractSms = require('./AbstractSms');
 const User = require('../models/User');
 
 class SmsFromUser extends AbstractSms {
-    constructor(gate, smsGate) {
+    constructor(gate, smsGate, smsSecondCheck) {
         super(gate);
 
         this._smsGate = smsGate;
         this._smsGate.on('incoming', this._handleSms.bind(this));
         this._subscribes = new Map();
+
+        smsSecondCheck.on('sms', this._handleSms.bind(this));
     }
 
     async firstStep({ user, phone, mail }, recentModel) {

@@ -15,14 +15,14 @@ const User = require('../models/User');
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
 
 class Gate extends GateService {
-    constructor(smsGate) {
+    constructor(smsGate, smsSecondCheck) {
         super();
 
         this._strategies = {
             social: new SocialStrategy(this),
             mail: new MailStrategy(this),
             smsToUser: new SmsToUserStrategy(this, smsGate),
-            smsFromUser: new SmsFromUserStrategy(this, smsGate),
+            smsFromUser: new SmsFromUserStrategy(this, smsGate, smsSecondCheck),
         };
 
         this._strategyInc = 0;
