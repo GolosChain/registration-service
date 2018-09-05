@@ -1,9 +1,12 @@
+const request = require('request-promise-native');
 const core = require('gls-core-service');
 const BasicService = core.services.Basic;
 const Logger = core.Logger;
 const stats = core.statsClient;
 const env = require('../env');
 const User = require('../models/User');
+
+const SMSC_URL = 'https://smsc.ru/sys/get.php';
 
 class SmsSecondCheck extends BasicService {
     async start() {
@@ -43,7 +46,31 @@ class SmsSecondCheck extends BasicService {
     }
 
     async _extractPhonesHistoryFromSMSC() {
-        // TODO -
+        const login = env.GLS_SMS_GATE_LOGIN;
+        const pass = env.GLS_SMS_GATE_PASS;
+        const hour = env.GLS_SMS_VERIFY_EXPIRATION_HOURS + 1;
+        const query = `${SMSC_URL}?get_answers=1&login=${login}&psw=${pass}&fmt=3&hour=${hour}`;
+        const rawHistory = await request.get(query);
+        const history = JSON.parse(rawHistory);
+        const result = [];
+
+        if (history.error) {
+            throw `SMSC history error - [${history.error_code}] ${history.error}`;
+        }
+
+        if (!Array.isArray(history)) {
+            throw `Invalid SMSC history response - ${rawHistory}`;
+        }
+
+        for (let entity of history) {
+            if (entity.message === '[CALL]') {
+                continue;
+            }
+
+            result.push(entity.phone);
+        }
+
+        return result;
     }
 
     async _extractPhonesHistoryFromTWILIO() {
