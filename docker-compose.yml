@@ -48,6 +48,7 @@ services:
       - GLS_TWILIO_PHONE_FROM
       - GLS_SMSC_SENDER_NAME
       - GLS_FACADE_CONNECT
+      - GLS_SMS_SECOND_CHECK_INTERVAL
 
 volumes:
   mongodb_vol:
