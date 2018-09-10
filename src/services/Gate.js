@@ -150,7 +150,7 @@ class Gate extends GateService {
 
         this._onlyStrategies(model, ['smsFromUser', 'smsToUser']);
 
-        const result = this._strategies[model.strategy].changePhone({ user, phone });
+        const result = this._strategies[model.strategy].changePhone({ model, phone });
 
         stats.timing('registration_change_phone', new Date() - timer);
         return result;
@@ -165,7 +165,7 @@ class Gate extends GateService {
 
         this._onlyStrategies(model, ['smsToUser']);
 
-        const result = this._strategies[model.strategy].resendSmsCode({ user, phone });
+        const result = this._strategies[model.strategy].resendSmsCode({ model, phone });
 
         stats.timing('registration_resend_sms_code', new Date() - timer);
         return result;

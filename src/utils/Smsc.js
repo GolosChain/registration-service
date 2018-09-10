@@ -9,9 +9,17 @@ class Smsc {
         const login = env.GLS_SMS_GATE_LOGIN;
         const pass = env.GLS_SMS_GATE_PASS;
         const sender = env.GLS_SMSC_SENDER_NAME;
-        const result = await request.get(
-            `${SEND_POINT}?login=${login}&psw=${pass}&phones=${phone}&mes=${message}&sender=${sender}`
-        );
+        const query = [
+            `${SEND_POINT}`,
+            `?login=${login}`,
+            `&psw=${pass}`,
+            `&phones=${phone}`,
+            `&mes=${message}`,
+            `&sender=${sender}`,
+            `&fmt=3`,
+            `&charset=utf-8`,
+        ].join();
+        const result = await request.get(query);
 
         if (result.error) {
             throw `SMSC send error - [${result.error_code}] ${result.error}`;
@@ -24,7 +32,15 @@ class Smsc {
         const login = env.GLS_SMS_GATE_LOGIN;
         const pass = env.GLS_SMS_GATE_PASS;
         const hour = env.GLS_SMS_VERIFY_EXPIRATION_HOURS + 1;
-        const query = `${HISTORY_POINT}?get_answers=1&login=${login}&psw=${pass}&fmt=3&hour=${hour}`;
+        const query = [
+            `${HISTORY_POINT}`,
+            `?get_answers=1`,
+            `&login=${login}`,
+            `&psw=${pass}`,
+            `&hour=${hour}`,
+            `&fmt=3`,
+            `&charset=utf-8`,
+        ].join();
         const rawHistory = await request.get(query);
         const history = JSON.parse(rawHistory);
         const result = [];

@@ -75,19 +75,8 @@ class SmsToUser extends AbstractSms {
         await model.save();
     }
 
-    async changePhone({ model, phone }) {
-        if (this._isActual(model)) {
-            throw errors.E404.error;
-        }
-
-        model.phone = phone;
-        await model.save();
-    }
-
-    async resendCode({ phone }) {
-        const model = await User.findOne({ strategy: 'smsToUser', phone });
-
-        if (!model || !this._isActual(model)) {
+    async resendSmsCode({ model, phone }) {
+        if (!this._isActual(model)) {
             throw errors.E404.error;
         }
 
