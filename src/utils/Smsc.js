@@ -18,7 +18,7 @@ class Smsc {
             `&sender=${sender}`,
             `&fmt=3`,
             `&charset=utf-8`,
-        ].join();
+        ].join('');
         const result = await request.get(query);
 
         if (result.error) {
@@ -40,7 +40,7 @@ class Smsc {
             `&hour=${hour}`,
             `&fmt=3`,
             `&charset=utf-8`,
-        ].join();
+        ].join('');
         const rawHistory = await request.get(query);
         const history = JSON.parse(rawHistory);
         const result = [];
