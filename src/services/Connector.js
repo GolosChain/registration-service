@@ -1,7 +1,7 @@
 const golos = require('golos-js');
 const request = require('request-promise-native');
 const core = require('gls-core-service');
-const GateService = core.services.Gate;
+const BasicConnector = core.services.Connector;
 const errors = core.httpError;
 const stats = core.statsClient;
 const Logger = core.Logger;
@@ -14,7 +14,7 @@ const User = require('../models/User');
 
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
 
-class Gate extends GateService {
+class Connector extends BasicConnector {
     constructor(smsGate, smsSecondCheck) {
         super();
 
@@ -220,4 +220,4 @@ class Gate extends GateService {
     }
 }
 
-module.exports = Gate;
+module.exports = Connector;

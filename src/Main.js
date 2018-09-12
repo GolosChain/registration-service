@@ -3,7 +3,7 @@ const stats = core.statsClient;
 const BasicMain = core.services.BasicMain;
 const MongoDB = core.services.MongoDB;
 const env = require('./env');
-const Gate = require('./services/Gate');
+const Connector = require('./services/Connector');
 const SmsGate = require('./services/SmsGate');
 const SmsSecondCheck = require('./services/SmsSecondCheck');
 const Smsc = require('./utils/Smsc');
@@ -17,10 +17,10 @@ class Main extends BasicMain {
         const mongoDb = new MongoDB();
         const smsGate = new SmsGate(smsc, twilio);
         const smsSecondCheck = new SmsSecondCheck(smsc, twilio);
-        const gate = new Gate(smsGate, smsSecondCheck);
+        const connector = new Connector(smsGate, smsSecondCheck);
 
         this.printEnvBasedConfig(env);
-        this.addNested(mongoDb, smsGate, gate, smsSecondCheck);
+        this.addNested(mongoDb, smsGate, connector, smsSecondCheck);
     }
 }
 
