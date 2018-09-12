@@ -40,6 +40,7 @@ class Smsc {
             `&hour=${hour}`,
             `&fmt=3`,
             `&charset=utf-8`,
+            `&fixit=${Math.random()}`
         ].join('');
         const rawHistory = await request.get(query);
         const history = JSON.parse(rawHistory);
