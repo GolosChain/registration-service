@@ -10,7 +10,18 @@ class Strategy {
         this._randomSmsStrategyInc = 0;
     }
 
-    setStrategyChoicer(choicer, data) {
+    getStrategyChoicer() {
+        return {
+            choicer: this._strategyChoicer,
+            data: this._strategyChoicerData,
+        };
+    }
+
+    setStrategyChoicer(choicer, data = null) {
+        if (!['randomSmsStrategy', 'directStrategy', 'legacy'].includes(choicer)) {
+            throw { code: 400, message: 'Bad strategy name' };
+        }
+
         this._strategyChoicer = choicer;
         this._strategyChoicerData = data;
     }

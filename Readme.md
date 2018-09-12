@@ -50,6 +50,9 @@ API JSON-RPC:
      phone <string>  // Номер телефона. 
      
  // Control api    
+ 
+ getStrategyChoicer:              // Возвращает способ выбора стратегии для регистрации и сопутствующие данные
+     <empty>
      
  setStrategyChoicer:              // Устанавливает способ выбора стратегии для регистрации
      choicer: <string>('legacy')  // Тип способа выбора стратегии          

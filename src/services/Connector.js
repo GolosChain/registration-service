@@ -47,6 +47,7 @@ class Connector extends BasicConnector {
                 subscribeOnSmsGet: checkEnable(this._subscribeOnSmsGet),
 
                 // control api
+                getStrategyChoicer: this._getStrategyChoicer.bind(this),
                 setStrategyChoicer: this._setStrategyChoicer.bind(this),
                 enableRegistration: this._enableRegistration.bind(this),
                 disableRegistration: this._disableRegistration.bind(this),
@@ -64,7 +65,7 @@ class Connector extends BasicConnector {
                 return await handler.apply(this, params);
             }
 
-            return { code: 423, message: 'Registration disabled' };
+            throw { code: 423, message: 'Registration disabled' };
         };
     }
 
@@ -233,6 +234,10 @@ class Connector extends BasicConnector {
         return !!accounts.length;
     }
 
+    async _getStrategyChoicer() {
+        return this._strategyUtil.getStrategyChoicer();
+    }
+
     async _setStrategyChoicer({ choicer, data = null }) {
         this._strategyUtil.setStrategyChoicer(choicer, data);
     }
@@ -246,7 +251,7 @@ class Connector extends BasicConnector {
     }
 
     async _isRegistrationEnabled() {
-        return this._isEnabled;
+        return { enabled: this._isEnabled };
     }
 }
 
