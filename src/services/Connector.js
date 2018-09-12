@@ -10,6 +10,7 @@ const SocialStrategy = require('../controllers/Social');
 const MailStrategy = require('../controllers/Mail');
 const SmsToUserStrategy = require('../controllers/SmsToUser');
 const SmsFromUserStrategy = require('../controllers/SmsFromUser');
+const StrategyUtil = require('../utils/Strategy');
 const User = require('../models/User');
 
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
@@ -18,14 +19,14 @@ class Connector extends BasicConnector {
     constructor(smsGate, smsSecondCheck) {
         super();
 
-        this._strategies = {
+        this._controllers = {
             social: new SocialStrategy(this),
             mail: new MailStrategy(this),
             smsToUser: new SmsToUserStrategy(this, smsGate),
             smsFromUser: new SmsFromUserStrategy(this, smsGate, smsSecondCheck),
         };
 
-        this._strategyInc = 0;
+        this._strategyUtil = new StrategyUtil();
     }
 
     async start() {
@@ -41,6 +42,9 @@ class Connector extends BasicConnector {
                 changePhone: this._changePhone.bind(this),
                 resendSmsCode: this._resendSmsCode.bind(this),
                 subscribeOnSmsGet: this._subscribeOnSmsGet.bind(this),
+
+                // control api
+                setStrategyChoicer: this._setStrategyChoicer.bind(this),
             },
             requiredClients: {
                 facade: env.GLS_FACADE_CONNECT,
@@ -61,7 +65,7 @@ class Connector extends BasicConnector {
             return { currentState: 'firstStep' };
         }
 
-        const result = this._strategies[recentModel.strategy].getState(recentModel);
+        const result = this._controllers[recentModel.strategy].getState(recentModel);
 
         stats.timing('registration_get_state', new Date() - timer);
         return result;
@@ -74,7 +78,7 @@ class Connector extends BasicConnector {
         await this._checkCaptcha(captcha);
 
         const strategy = await this._choiceStrategy();
-        const handler = this._strategies[strategy];
+        const handler = this._controllers[strategy];
         const recentModel = await this._getUserModel(user);
         const result = await handler.firstStep({ user, phone, mail }, recentModel);
 
@@ -108,13 +112,7 @@ class Connector extends BasicConnector {
     }
 
     async _choiceStrategy() {
-        // TODO More effective choicer with Google Analyst
-        const strategies = ['smsFromUser', 'smsToUser'];
-        const choice = strategies[this._strategyInc % 2];
-
-        this._strategyInc++;
-
-        return choice;
+        return await this._strategyUtil.choiceStrategy();
     }
 
     async _verify({ user, ...data }) {
@@ -123,7 +121,7 @@ class Connector extends BasicConnector {
         await this._throwIfUserInBlockChain(user);
 
         const model = await this._getUserModelOrThrow(user);
-        const result = this._strategies[model.strategy].verify({ model, ...data });
+        const result = this._controllers[model.strategy].verify({ model, ...data });
 
         stats.timing('registration_verify', new Date() - timer);
         return result;
@@ -135,7 +133,7 @@ class Connector extends BasicConnector {
         await this._throwIfUserInBlockChain(user);
 
         const model = await this._getUserModelOrThrow(user);
-        const result = this._strategies[model.strategy].toBlockChain({ model, ...keys });
+        const result = this._controllers[model.strategy].toBlockChain({ model, ...keys });
 
         stats.timing('registration_to_blockchain', new Date() - timer);
         return result;
@@ -150,7 +148,7 @@ class Connector extends BasicConnector {
 
         this._onlyStrategies(model, ['smsFromUser', 'smsToUser']);
 
-        const result = this._strategies[model.strategy].changePhone({ model, phone });
+        const result = this._controllers[model.strategy].changePhone({ model, phone });
 
         stats.timing('registration_change_phone', new Date() - timer);
         return result;
@@ -165,7 +163,7 @@ class Connector extends BasicConnector {
 
         this._onlyStrategies(model, ['smsToUser']);
 
-        const result = this._strategies[model.strategy].resendSmsCode({ model, phone });
+        const result = this._controllers[model.strategy].resendSmsCode({ model, phone });
 
         stats.timing('registration_resend_sms_code', new Date() - timer);
         return result;
@@ -180,7 +178,7 @@ class Connector extends BasicConnector {
 
         this._onlyStrategies(model, ['smsFromUser']);
 
-        const target = this._strategies[model.strategy];
+        const target = this._controllers[model.strategy];
         const result = target.subscribeOnSmsGet({ user, phone, channelId });
 
         stats.timing('registration_subscribe_on_sms_get', new Date() - timer);
@@ -217,6 +215,10 @@ class Connector extends BasicConnector {
         const accounts = await golos.api.getAccountsAsync([user]);
 
         return !!accounts.length;
+    }
+
+    async _setStrategyChoicer({ choicer, data = null }) {
+        this._strategyUtil.setStrategyChoicer(choicer, data);
     }
 }
 
