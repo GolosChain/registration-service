@@ -12,6 +12,9 @@
 API JSON-RPC:
 
  ```
+ 
+ // Step api
+ 
  getState:             // Получить текущий стейт регистрации для пользователя.
      user:             // Имя пользователя.
  
@@ -32,17 +35,40 @@ API JSON-RPC:
      posting <string>  // Ключ аккаунта (постинг ключ).
      memo <string>     // Ключ аккаунта (мемо ключ).
      
- changePhone:          // Смена номера телефона (для стратегий smsFromUser, smsToUser).
-     user <string>     // Имя пользователя.
-     phone <string>    // Номер телефона.
+ // Strategy-specific api    
      
- resendSmsCode:        // Переотравка кода подтверждения (для стратегии smsToUser).
-     user <string>     // Имя пользователя.
-     phone <string>    // Номер телефона.
+ changePhone:        // Смена номера телефона (для стратегий smsFromUser, smsToUser).
+     user <string>   // Имя пользователя.
+     phone <string>  // Номер телефона.
      
- subscribeOnSmsGet:    // Подписка на факт получения СМС от юзера (для стратегии smsFromUser).
-     user <string>     // Имя пользователя.
-     phone <string>    // Номер телефона. 
+ resendSmsCode:      // Переотравка кода подтверждения (для стратегии smsToUser).
+     user <string>   // Имя пользователя.
+     phone <string>  // Номер телефона.
+     
+ subscribeOnSmsGet:  // Подписка на факт получения СМС от юзера (для стратегии smsFromUser).
+     user <string>   // Имя пользователя.
+     phone <string>  // Номер телефона. 
+     
+ // Control api    
+     
+ setStrategyChoicer:              // Устанавливает способ выбора стратегии для регистрации
+     choicer: <string>('legacy')  // Тип способа выбора стратегии          
+        [
+          randomSmsStrategy       // Поочередно выбирается 'smsFromUser' и 'smsToUser' стратегия.
+        | directStrategy          // Жестко устанавливается указанная в data стратегия (смотри ниже)
+        | legacy                  // Устанавливается стратегия 'smsFromUser'
+        ]   
+     data: <any>(null)            // Сопутствующие данные для способа выбора стратегии
+                                  // Для directStrategy необходимо указать имя стратегии                                 
+ 
+ enableRegistration:          // Разрешает регистрацию для пользователей
+     <empty>
+ 
+ disableRegistration:         // Запрещает регистрацию для пользователей
+     <empty>
+ 
+ isRegistrationEnabled:       // Проверяет разрешена ли регистрация для пользователей
+     <empty>    
  ```
 
 API SMS-GATE:
