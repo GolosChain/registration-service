@@ -16,7 +16,7 @@ class SmsSecondCheck extends BasicService {
     }
 
     async start() {
-        this.startLoop(1000, env.GLS_SMS_SECOND_CHECK_INTERVAL);
+        this.startLoop(env.GLS_SMS_SECOND_CHECK_INTERVAL, env.GLS_SMS_SECOND_CHECK_INTERVAL);
     }
 
     async stop() {
