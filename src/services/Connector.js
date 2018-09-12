@@ -27,29 +27,45 @@ class Connector extends BasicConnector {
         };
 
         this._strategyUtil = new StrategyUtil();
+        this._isEnabled = env.GLS_IS_REG_ENABLED_ON_START;
     }
 
     async start() {
+        const checkEnable = this._checkEnable.bind(this);
+
         await super.start({
             serverRoutes: {
                 // step api
-                getState: this._getState.bind(this),
-                firstStep: this._firstStep.bind(this),
-                verify: this._verify.bind(this),
-                toBlockChain: this._toBlockChain.bind(this),
+                getState: checkEnable(this._getState),
+                firstStep: checkEnable(this._firstStep),
+                verify: checkEnable(this._verify),
+                toBlockChain: checkEnable(this._toBlockChain),
 
                 // strategy-specific api
-                changePhone: this._changePhone.bind(this),
-                resendSmsCode: this._resendSmsCode.bind(this),
-                subscribeOnSmsGet: this._subscribeOnSmsGet.bind(this),
+                changePhone: checkEnable(this._changePhone),
+                resendSmsCode: checkEnable(this._resendSmsCode),
+                subscribeOnSmsGet: checkEnable(this._subscribeOnSmsGet),
 
                 // control api
                 setStrategyChoicer: this._setStrategyChoicer.bind(this),
+                enableRegistration: this._enableRegistration.bind(this),
+                disableRegistration: this._disableRegistration.bind(this),
+                isRegistrationEnabled: this._isRegistrationEnabled.bind(this),
             },
             requiredClients: {
                 facade: env.GLS_FACADE_CONNECT,
             },
         });
+    }
+
+    _checkEnable(handler) {
+        return async (...params) => {
+            if (this._isEnabled) {
+                return await handler.apply(this, params);
+            }
+
+            return { code: 423, message: 'Registration disabled' };
+        };
     }
 
     async _getState({ user }) {
@@ -219,6 +235,18 @@ class Connector extends BasicConnector {
 
     async _setStrategyChoicer({ choicer, data = null }) {
         this._strategyUtil.setStrategyChoicer(choicer, data);
+    }
+
+    async _enableRegistration() {
+        this._isEnabled = true;
+    }
+
+    async _disableRegistration() {
+        this._isEnabled = false;
+    }
+
+    async _isRegistrationEnabled() {
+        return this._isEnabled;
     }
 }
 
