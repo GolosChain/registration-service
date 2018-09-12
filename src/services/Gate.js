@@ -6,10 +6,10 @@ const errors = core.httpError;
 const stats = core.statsClient;
 const Logger = core.Logger;
 const env = require('../env');
-const SocialStrategy = require('../handlers/Social');
-const MailStrategy = require('../handlers/Mail');
-const SmsToUserStrategy = require('../handlers/SmsToUser');
-const SmsFromUserStrategy = require('../handlers/SmsFromUser');
+const SocialStrategy = require('../controllers/Social');
+const MailStrategy = require('../controllers/Mail');
+const SmsToUserStrategy = require('../controllers/SmsToUser');
+const SmsFromUserStrategy = require('../controllers/SmsFromUser');
 const User = require('../models/User');
 
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
