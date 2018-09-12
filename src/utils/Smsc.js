@@ -5,6 +5,10 @@ const SEND_POINT = 'https://smsc.ru/sys/send.php';
 const HISTORY_POINT = 'https://smsc.ru/sys/get.php';
 
 class Smsc {
+    constructor() {
+        this._duplicateFixRoundRobin = 0;
+    }
+
     async send(phone, message) {
         const login = env.GLS_SMS_GATE_LOGIN;
         const pass = env.GLS_SMS_GATE_PASS;
@@ -32,12 +36,13 @@ class Smsc {
         const login = env.GLS_SMS_GATE_LOGIN;
         const pass = env.GLS_SMS_GATE_PASS;
         const hour = env.GLS_SMS_VERIFY_EXPIRATION_HOURS + 1;
+        const robin = ++this._duplicateFixRoundRobin % 3;
         const query = [
             `${HISTORY_POINT}`,
             `?get_answers=1`,
             `&login=${login}`,
             `&psw=${pass}`,
-            `&hour=${hour}`,
+            `&hour=${hour + robin}`,
             `&fmt=3`,
             `&charset=utf-8`,
             `&fixit=${Math.random()}`
