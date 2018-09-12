@@ -12,6 +12,9 @@
 API JSON-RPC:
 
  ```
+ getState:             // Получить текущий стейт регистрации для пользователя.
+     user:             // Имя пользователя.
+ 
  firstStep:            // Первый шаг регистрации.
      captcha <string>  // Ключ Google reCaptcha.
      user <string>     // Имя пользователя.
