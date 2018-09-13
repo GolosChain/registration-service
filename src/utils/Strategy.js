@@ -43,13 +43,13 @@ class Strategy {
                 }
 
             case 'directStrategy':
-                const strategy = this._strategyChoicerData.strategy;
+                const strategyData = this._strategyChoicerData;
 
-                if (STRATEGY_LIST.includes(strategy)) {
-                    return strategy;
+                if (strategyData && STRATEGY_LIST.includes(strategyData.strategy)) {
+                    return strategyData.strategy;
                 }
 
-                Logger.error(`Invalid strategy - "${strategy}", set strategy choicer to legacy.`);
+                Logger.error(`Invalid strategy data - "${strategyData}", set strategy choicer to legacy.`);
 
                 this._strategyChoicer = 'legacy';
                 return this.choiceStrategy();
