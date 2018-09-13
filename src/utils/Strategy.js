@@ -1,13 +1,20 @@
 const core = require('gls-core-service');
 const Logger = core.utils.Logger;
+const env = require('../env');
 
 const STRATEGY_LIST = ['smsFromUser', 'smsToUser', 'mail', 'social'];
 
 class Strategy {
     constructor() {
-        this._strategyChoicer = 'legacy';
+        this._strategyChoicer = env.GLS_DEFAULT_STRATEGY_CHOICER;
         this._strategyChoicerData = null;
         this._randomSmsStrategyInc = 0;
+
+        const defaultData = env.GLS_DEFAULT_STRATEGY_CHOICER_DATA;
+
+        if (defaultData && typeof defaultData === 'string') {
+            this._strategyChoicerData = JSON.parse(defaultData);
+        }
     }
 
     getStrategyChoicer() {
@@ -36,7 +43,7 @@ class Strategy {
                 }
 
             case 'directStrategy':
-                const strategy = this._strategyChoicerData;
+                const strategy = this._strategyChoicerData.strategy;
 
                 if (STRATEGY_LIST.includes(strategy)) {
                     return strategy;
