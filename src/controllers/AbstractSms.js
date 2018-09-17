@@ -1,9 +1,11 @@
+const hash = require('golos-js/lib/auth/ecc').hash;
 const core = require('gls-core-service');
 const Moments = core.utils.Moments;
 const errors = core.httpError;
 const Abstract = require('./Abstract');
 const env = require('../env');
 const User = require('../models/User');
+const LegacyUser = require('../models/LegacyUser');
 
 class AbstractSms extends Abstract {
     async getState(recentModel) {
@@ -69,16 +71,30 @@ class AbstractSms extends Abstract {
         }
     }
 
-    async _throwIfPhoneDuplicate(user, phone) {
-        const model = await User.findOne({ strategy: 'smsFromUser', phone });
+    async _throwIfPhoneDuplicate(user, phone, strategy) {
+        if (this._isLegacyUser(phone)) {
+            this._throwPhoneDuplicateError();
+        }
+
+        const model = await User.findOne({ strategy, phone });
 
         if (!model) {
             return;
         }
 
         if (this._isActual(model) || model.registered) {
-            throw { code: 409, message: 'Phone already registered.' };
+            this._throwPhoneDuplicateError();
         }
+    }
+
+    async _isLegacyUser(phone) {
+        const count = await LegacyUser.countDocuments({ phoneHash: hash.sha256(phone, 'hex') });
+
+        return !!count;
+    }
+
+    _throwPhoneDuplicateError() {
+        throw { code: 409, message: 'Phone already registered.' };
     }
 
     _getLangBy(phone) {
