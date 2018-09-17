@@ -51,6 +51,7 @@ services:
       - GLS_IS_REG_ENABLED_ON_START
       - GLS_DEFAULT_STRATEGY_CHOICER
       - GLS_DEFAULT_STRATEGY_CHOICER_DATA
+      - GLS_CAPTCHA_ON
 
 volumes:
   mongodb_vol:

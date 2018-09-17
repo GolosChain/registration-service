@@ -92,7 +92,10 @@ class Connector extends BasicConnector {
         const timer = new Date();
 
         await this._throwIfUserInBlockChain(user);
-        await this._checkCaptcha(captcha);
+
+        if (env.GLS_CAPTCHA_ON) {
+            await this._checkCaptcha(captcha);
+        }
 
         const strategy = await this._choiceStrategy();
         const handler = this._controllers[strategy];
