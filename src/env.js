@@ -21,6 +21,7 @@ module.exports = {
     GLS_IS_REG_ENABLED_ON_START: env.GLS_IS_REG_ENABLED_ON_START || true,
     GLS_DEFAULT_STRATEGY_CHOICER: env.GLS_DEFAULT_STRATEGY_CHOICER || 'legacy',
     GLS_DEFAULT_STRATEGY_CHOICER_DATA: env.GLS_DEFAULT_STRATEGY_CHOICER_DATA || null,
+    GLS_CAPTCHA_ON: env.GLS_CAPTCHA_ON || true,
 };
 
 if (module.exports.GLS_IS_REG_ENABLED_ON_START === 'true') {
@@ -29,4 +30,8 @@ if (module.exports.GLS_IS_REG_ENABLED_ON_START === 'true') {
 
 if (module.exports.GLS_IS_REG_ENABLED_ON_START === 'false') {
     module.exports.GLS_IS_REG_ENABLED_ON_START = false;
+}
+
+if (module.exports.GLS_CAPTCHA_ON === 'false') {
+    module.exports.GLS_CAPTCHA_ON = false;
 }

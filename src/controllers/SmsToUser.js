@@ -22,7 +22,7 @@ class SmsToUser extends AbstractSms {
             return recentState;
         }
 
-        await this._throwIfPhoneDuplicate(user, phone);
+        await this._throwIfPhoneDuplicate(user, phone, 'smsToUser');
 
         const model = new User({ user, phone, mail, strategy: 'smsToUser' });
 
