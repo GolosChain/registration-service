@@ -6,6 +6,7 @@ const HISTORY_POINT = 'https://smsc.ru/sys/get.php';
 
 class Smsc {
     async send(phone, message) {
+        const encodedMessage = encodeURIComponent(message);
         const login = env.GLS_SMS_GATE_LOGIN;
         const pass = env.GLS_SMS_GATE_PASS;
         const sender = env.GLS_SMSC_SENDER_NAME;
@@ -14,7 +15,7 @@ class Smsc {
             `?login=${login}`,
             `&psw=${pass}`,
             `&phones=${phone}`,
-            `&mes=${message}`,
+            `&mes=${encodedMessage}`,
             `&sender=${sender}`,
             `&fmt=3`,
             `&charset=utf-8`,
@@ -39,7 +40,7 @@ class Smsc {
             `&psw=${pass}`,
             `&hour=${hour}`,
             `&fmt=3`,
-            `&charset=utf-8`
+            `&charset=utf-8`,
         ].join('');
         const rawHistory = await request.get(query);
         const history = JSON.parse(rawHistory);
