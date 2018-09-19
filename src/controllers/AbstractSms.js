@@ -72,7 +72,7 @@ class AbstractSms extends Abstract {
     }
 
     async _throwIfPhoneDuplicate(user, phone, strategy) {
-        if (this._isLegacyUser(phone)) {
+        if (await this._isLegacyUser(phone)) {
             this._throwPhoneDuplicateError();
         }
 
