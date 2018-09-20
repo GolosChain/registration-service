@@ -52,6 +52,7 @@ services:
       - GLS_DEFAULT_STRATEGY_CHOICER
       - GLS_DEFAULT_STRATEGY_CHOICER_DATA
       - GLS_CAPTCHA_ON
+      - GLS_MAIL_CONNECT
 
 volumes:
   mongodb_vol:
