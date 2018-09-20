@@ -1,6 +1,7 @@
 const core = require('gls-core-service');
 const Template = core.Template;
 
+// prettier-ignore
 module.exports = Template.makeFor({
     sms: {
         activationCode: {
@@ -10,6 +11,12 @@ module.exports = Template.makeFor({
         successVerification: {
             ru: 'Спасибо, ваш номер подтвержден. Продолжите регистрацию.',
             en: 'Thank you, your number is successfully confirmed. Please, continue the registration.',
+        },
+    },
+    mail: {
+        subject: {
+            ru: 'Добро пожаловать на Golos.io!',
+            en: '', // TODO add translate
         },
     },
 });

@@ -51,6 +51,7 @@ class AbstractSms extends Abstract {
         }
 
         await this._registerInBlockChain(model.user, { ...keys });
+        await this._sendFinishMail(model.mail, this._getLangBy(model.phone));
     }
 
     _handleRecentModel(recentModel, phone) {
