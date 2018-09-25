@@ -25,6 +25,8 @@ class AbstractSms extends Abstract {
     }
 
     async changePhone({ model, phone }) {
+        await this._throwIfPhoneDuplicate(model.user, model.phone, model.strategy);
+
         if (!this._isActual(model)) {
             throw errors.E404.error;
         }
@@ -51,6 +53,11 @@ class AbstractSms extends Abstract {
         }
 
         await this._registerInBlockChain(model.user, { ...keys });
+
+        model.registered = true;
+        await model.save();
+
+        await this._sendFinishMail(model.mail, this._getLangBy(model.phone));
     }
 
     _handleRecentModel(recentModel, phone) {
@@ -72,7 +79,7 @@ class AbstractSms extends Abstract {
     }
 
     async _throwIfPhoneDuplicate(user, phone, strategy) {
-        if (this._isLegacyUser(phone)) {
+        if (await this._isLegacyUser(phone)) {
             this._throwPhoneDuplicateError();
         }
 
