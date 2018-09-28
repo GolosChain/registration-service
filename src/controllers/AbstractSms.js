@@ -27,6 +27,7 @@ class AbstractSms extends Abstract {
     async changePhone({ model, phone }) {
         await this._throwIfPhoneDuplicate(model.user, phone, model.strategy);
 
+
         if (!this._isActual(model)) {
             throw errors.E404.error;
         }
