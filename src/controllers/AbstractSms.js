@@ -25,7 +25,8 @@ class AbstractSms extends Abstract {
     }
 
     async changePhone({ model, phone }) {
-        await this._throwIfPhoneDuplicate(model.user, model.phone, model.strategy);
+        await this._throwIfPhoneDuplicate(model.user, phone, model.strategy);
+
 
         if (!this._isActual(model)) {
             throw errors.E404.error;
@@ -83,7 +84,7 @@ class AbstractSms extends Abstract {
             this._throwPhoneDuplicateError();
         }
 
-        const model = await User.findOne({ strategy, phone });
+        const model = await User.findOne({ strategy, phone }, {}, { sort: { _id: -1 } });
 
         if (!model) {
             return;
