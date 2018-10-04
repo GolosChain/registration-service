@@ -2,6 +2,7 @@ const hash = require('golos-js/lib/auth/ecc').hash;
 const core = require('gls-core-service');
 const Moments = core.utils.Moments;
 const errors = core.httpError;
+const Logger = core.utils.Logger;
 const Abstract = require('./Abstract');
 const env = require('../env');
 const User = require('../models/User');
@@ -26,7 +27,6 @@ class AbstractSms extends Abstract {
 
     async changePhone({ model, phone }) {
         await this._throwIfPhoneDuplicate(model.user, phone, model.strategy);
-
 
         if (!this._isActual(model)) {
             throw errors.E404.error;
@@ -53,7 +53,13 @@ class AbstractSms extends Abstract {
             throw errors.E404.error;
         }
 
-        await this._registerInBlockChain(model.user, { ...keys });
+        try {
+            await this._registerInBlockChain(model.user, { ...keys });
+        } catch (error) {
+            Logger.error(`BlockChain registration error - ${error}`);
+
+            throw { code: 500, message: 'BlockChain error' };
+        }
 
         model.registered = true;
         await model.save();

@@ -16,7 +16,7 @@ module.exports = Template.makeFor({
     mail: {
         subject: {
             ru: 'Добро пожаловать на Golos.io!',
-            en: '', // TODO add translate
+            en: 'Welcome to Golos.io!',
         },
     },
 });
