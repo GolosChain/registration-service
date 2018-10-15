@@ -22,7 +22,7 @@ class Phone {
     static maskBody(phone) {
         const segments = /^(...)(.*)(..)$/g.exec(phone).slice(1, 4);
 
-        segments[1].replace(/./g, '*');
+        segments[1] = segments[1].replace(/./g, '*');
 
         return segments.join('');
     }
