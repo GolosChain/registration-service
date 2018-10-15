@@ -1,6 +1,6 @@
 {
     "name": "registration-service",
-    "version": "0.3.0",
+    "version": "1.0.0",
     "description": "",
     "main": "./src/index.js",
     "scripts": {
@@ -25,13 +25,13 @@
     "homepage": "https://github.com/GolosChain/registration-service#readme",
     "dependencies": {
         "gls-core-service": "git+https://github.com/GolosChain/core-service.git",
-        "golos-js": "^0.7.3",
+        "golos-js": "^0.7.5",
         "micro": "^9.3.3",
         "ramda": "^0.25.0",
         "random": "^2.0.12",
         "request": "^2.88.0",
         "request-promise-native": "^1.0.5",
-        "twilio": "^3.19.2",
+        "twilio": "^3.22.0",
         "urlencoded-body-parser": "^2.0.1"
     }
 }
