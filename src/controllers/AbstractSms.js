@@ -1,4 +1,4 @@
-const hash = require('golos-js/lib/auth/ecc').hash;
+const PhoneUtils = require('../utils/Phone');
 const core = require('gls-core-service');
 const Moments = core.utils.Moments;
 const errors = core.httpError;
@@ -61,7 +61,11 @@ class AbstractSms extends Abstract {
             throw { code: 500, message: 'BlockChain error' };
         }
 
+        const phone = model.phone;
+
         model.registered = true;
+        model.phone = PhoneUtils.maskBody(phone);
+        model.phoneHash = PhoneUtils.saltedHash(phone);
         await model.save();
 
         await this._sendFinishMail(model.mail, this._getLangBy(model.phone));
@@ -90,7 +94,12 @@ class AbstractSms extends Abstract {
             this._throwPhoneDuplicateError();
         }
 
-        const model = await User.findOne({ strategy, phone }, {}, { sort: { _id: -1 } });
+        const phoneHash = PhoneUtils.saltedHash(phone);
+        const model = await User.findOne(
+            { strategy, $or: [{ phone }, { phoneHash }] },
+            {},
+            { sort: { _id: -1 } }
+        );
 
         if (!model) {
             return;
@@ -102,7 +111,7 @@ class AbstractSms extends Abstract {
     }
 
     async _isLegacyUser(phone) {
-        const count = await LegacyUser.countDocuments({ phoneHash: hash.sha256(phone, 'hex') });
+        const count = await LegacyUser.countDocuments({ phoneHash: PhoneUtils.plainHash(phone) });
 
         return !!count;
     }

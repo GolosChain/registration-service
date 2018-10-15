@@ -1,12 +1,13 @@
 const golos = require('golos-js');
 const core = require('gls-core-service');
 const BlockChainValues = core.utils.BlockChainValues;
+const Logger = core.utils.Logger;
 const env = require('../env');
 const locale = require('../locale');
 
 class Abstract {
-    constructor(gate) {
-        this._gate = gate;
+    constructor(connector) {
+        this._connector = connector;
     }
 
     async getState() {
@@ -60,13 +61,18 @@ class Abstract {
     async _sendFinishMail(mail, lang) {
         const upperLang = lang.toUpperCase();
 
-        await this._gate.sendTo('mail', 'send', {
-            from: 'no-reply@golos.io',
-            to: mail,
-            subject: locale.mail.subject[lang](),
-            templateId: env[`GLS_MAIL_FINISH_TEMPLATE_${upperLang}`],
-            data: {},
-        });
+        try {
+            await this._connector.sendTo('mail', 'send', {
+                from: 'no-reply@golos.io',
+                to: mail,
+                subject: locale.mail.subject[lang](),
+                templateId: env[`GLS_MAIL_FINISH_TEMPLATE_${upperLang}`],
+                data: {},
+            });
+        } catch (error) {
+            Logger.error(`Finish mail send error - ${error}`);
+            // Not a critical error, continue
+        }
     }
 }
 
