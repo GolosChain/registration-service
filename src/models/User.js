@@ -49,9 +49,11 @@ module.exports = MongoDB.makeModel(
         // Phone section
         phone: {
             type: String,
-            required: true,
             minLength: 6,
             maxLength: 100,
+        },
+        phoneHash: {
+            type: String,
         },
         isPhoneVerified: {
             type: Boolean,
@@ -94,6 +96,16 @@ module.exports = MongoDB.makeModel(
                 fields: {
                     strategy: 1,
                     phone: 1,
+                },
+                options: {
+                    sparse: true,
+                },
+            },
+            // Strategy - smsFromUser
+            {
+                fields: {
+                    strategy: 1,
+                    phoneHash: 1,
                 },
                 options: {
                     sparse: true,

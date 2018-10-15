@@ -1,4 +1,3 @@
-const request = require('request-promise-native');
 const core = require('gls-core-service');
 const BasicService = core.services.Basic;
 const Moments = core.utils.Moments;
