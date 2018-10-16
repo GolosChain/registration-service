@@ -9,8 +9,8 @@ const AbstractSms = require('./AbstractSms');
 const User = require('../models/User');
 
 class SmsToUser extends AbstractSms {
-    constructor(gate, smsGate) {
-        super(gate);
+    constructor(connector, smsGate) {
+        super({ connector });
 
         this._smsGate = smsGate;
     }

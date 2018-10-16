@@ -7,7 +7,11 @@ const locale = require('../locale');
 
 class Abstract {
     constructor(connector) {
-        this._connector = connector;
+        this.connector = connector;
+    }
+
+    async sendTo(...args) {
+        return await this.connector.sendTo(...args);
     }
 
     async getState() {
@@ -62,7 +66,7 @@ class Abstract {
         const upperLang = lang.toUpperCase();
 
         try {
-            await this._connector.sendTo('mail', 'send', {
+            await this.sendTo('mail', 'send', {
                 from: 'no-reply@golos.io',
                 to: mail,
                 subject: locale.mail.subject[lang](),
