@@ -6,7 +6,7 @@ const env = require('../env');
 const locale = require('../locale');
 
 class Abstract {
-    constructor(connector) {
+    constructor({ connector }) {
         this.connector = connector;
     }
 
