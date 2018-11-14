@@ -42,7 +42,7 @@ class Abstract {
         await golos.broadcast.accountCreateWithDelegationAsync(
             env.GLS_REGISTRAR_KEY,
             fee,
-            `${vestsDelegation} GESTS`,
+            `${vestsDelegation.toFixed(6)} GESTS`,
             env.GLS_REGISTRAR_ACCOUNT,
             user,
             this._makeFormedMetaKey(owner),
