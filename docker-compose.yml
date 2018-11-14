@@ -7,7 +7,7 @@ services:
     volumes:
       - mongodb_vol:/data/db
     ports:
-      - 127.0.0.1:27017:27017
+      - $GLS_MONGO_EXTERNAL_HOST:$GLS_MONGO_EXTERNAL_PORT:27017
     networks:
       - services-tier
 
