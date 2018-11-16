@@ -43,10 +43,6 @@ class SmsToUser extends AbstractSms {
     }
 
     async _sendSmsCode(model, phone) {
-        if (model.smsCodeDate - new Date() < env.GLS_SMS_RESEND_CODE_TIMEOUT) {
-            throw { code: 429, message: 'Try late.' };
-        }
-
         const lang = this._getLangBy(phone);
         const code = random.int(1000, 9999);
         const message = locale.sms.activationCode[lang]({ code });
@@ -82,6 +78,10 @@ class SmsToUser extends AbstractSms {
 
         if (model.isPhoneVerified) {
             throw errors.E409.error;
+        }
+
+        if (model.smsCodeDate - new Date() < env.GLS_SMS_RESEND_CODE_TIMEOUT) {
+            throw { code: 429, message: 'Try late.' };
         }
 
         await this._sendSmsCode(model, phone);
