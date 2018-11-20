@@ -20,7 +20,7 @@ class SmsToUser extends AbstractSms {
 
         if (state.currentState === 'verify') {
             if (recentModel.smsCodeResendCount <= env.GLS_SMS_RESEND_CODE_MAX) {
-                state.nextSmsRetry = +recentModel.smsCodeDate + env.GLS_SMS_RESEND_CODE_TIMEOUT;
+                state.nextSmsRetry = this._calcNextSmsRetry(recentModel);
             } else {
                 state.nextSmsRetry = null;
             }
@@ -55,7 +55,7 @@ class SmsToUser extends AbstractSms {
 
         return {
             strategy: 'smsToUser',
-            nextSmsRetry: +new Date() + env.GLS_SMS_RESEND_CODE_TIMEOUT,
+            nextSmsRetry: this._calcNextSmsRetry(),
         };
     }
 
@@ -66,8 +66,8 @@ class SmsToUser extends AbstractSms {
 
         model.smsCode = code;
         model.smsCodeDate = new Date();
-        await model.save();
 
+        await model.save();
         await this._smsGate.sendTo(phone, message, lang);
     }
 
@@ -92,9 +92,12 @@ class SmsToUser extends AbstractSms {
         await super.changePhone({ model, phone });
 
         model.smsCodeResendCount = 0;
+        model.smsCodeDate = new Date();
 
         await model.save();
         await this._sendSmsCode(model, model.phone);
+
+        return { nextSmsRetry: this._calcNextSmsRetry() };
     }
 
     async resendSmsCode({ model }) {
@@ -120,7 +123,15 @@ class SmsToUser extends AbstractSms {
 
         await this._sendSmsCode(model, model.phone);
 
-        return { nextSmsRetry: +model.smsCodeDate + env.GLS_SMS_RESEND_CODE_TIMEOUT };
+        return { nextSmsRetry: this._calcNextSmsRetry(model) };
+    }
+
+    _calcNextSmsRetry(model = null) {
+        if (model) {
+            return +model.smsCodeDate + env.GLS_SMS_RESEND_CODE_TIMEOUT;
+        } else {
+            return +new Date() + env.GLS_SMS_RESEND_CODE_TIMEOUT;
+        }
     }
 }
 
