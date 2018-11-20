@@ -84,6 +84,14 @@ class SmsToUser extends AbstractSms {
             throw { code: 429, message: 'Try late.' };
         }
 
+        if (model.smsCodeResendCount > env.GLS_SMS_RESEND_CODE_MAX) {
+            throw { code: 429, message: 'Too many retry.' };
+        }
+
+        model.smsCodeResendCount += 1;
+
+        await model.save();
+
         await this._sendSmsCode(model, phone);
     }
 }
