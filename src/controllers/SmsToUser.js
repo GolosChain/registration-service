@@ -20,7 +20,7 @@ class SmsToUser extends AbstractSms {
 
         if (state.currentState === 'verify') {
             if (recentModel.smsCodeResendCount <= env.GLS_SMS_RESEND_CODE_MAX) {
-                state.nextSmsRetry = recentModel.smsCodeDate + env.GLS_SMS_RESEND_CODE_TIMEOUT;
+                state.nextSmsRetry = +recentModel.smsCodeDate + env.GLS_SMS_RESEND_CODE_TIMEOUT;
             } else {
                 state.nextSmsRetry = null;
             }
@@ -55,7 +55,7 @@ class SmsToUser extends AbstractSms {
 
         return {
             strategy: 'smsToUser',
-            nextSmsRetry: new Date() + env.GLS_SMS_RESEND_CODE_TIMEOUT,
+            nextSmsRetry: +new Date() + env.GLS_SMS_RESEND_CODE_TIMEOUT,
         };
     }
 
