@@ -119,6 +119,8 @@ class SmsToUser extends AbstractSms {
         await model.save();
 
         await this._sendSmsCode(model, model.phone);
+
+        return { nextSmsRetry: +model.smsCodeDate + env.GLS_SMS_RESEND_CODE_TIMEOUT };
     }
 }
 
