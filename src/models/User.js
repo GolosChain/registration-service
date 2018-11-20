@@ -69,6 +69,7 @@ module.exports = MongoDB.makeModel(
         },
         smsCodeResendCount: {
             type: Number,
+            default: 0,
         },
 
         // Strategy - all (used for notify)
