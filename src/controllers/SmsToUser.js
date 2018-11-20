@@ -88,7 +88,16 @@ class SmsToUser extends AbstractSms {
         await model.save();
     }
 
-    async resendSmsCode({ model, phone }) {
+    async changePhone({ model, phone }) {
+        await super.changePhone({ model, phone });
+
+        model.smsCodeResendCount = 0;
+
+        await model.save();
+        await this._sendSmsCode(model, model.phone);
+    }
+
+    async resendSmsCode({ model }) {
         if (!this._isActual(model)) {
             throw errors.E404.error;
         }
@@ -97,7 +106,7 @@ class SmsToUser extends AbstractSms {
             throw errors.E409.error;
         }
 
-        if (model.smsCodeDate - new Date() < env.GLS_SMS_RESEND_CODE_TIMEOUT) {
+        if (new Date() - model.smsCodeDate < env.GLS_SMS_RESEND_CODE_TIMEOUT) {
             throw { code: 429, message: 'Try late.' };
         }
 
@@ -109,7 +118,7 @@ class SmsToUser extends AbstractSms {
 
         await model.save();
 
-        await this._sendSmsCode(model, phone);
+        await this._sendSmsCode(model, model.phone);
     }
 }
 

@@ -53,7 +53,6 @@ API JSON-RPC:
      
  resendSmsCode:      // Переотравка кода подтверждения (для стратегии smsToUser).
      user <string>   // Имя пользователя.
-     phone <string>  // Номер телефона.
      
  subscribeOnSmsGet:  // Подписка на факт получения СМС от юзера (для стратегии smsFromUser).
      user <string>   // Имя пользователя.
