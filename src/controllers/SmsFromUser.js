@@ -2,7 +2,7 @@ const core = require('gls-core-service');
 const errors = require('../utils/Errors');
 const stats = core.utils.statsClient;
 const Logger = core.utils.Logger;
-const locale = require('../locale');
+const locale = require('../data/locale');
 const AbstractSms = require('./AbstractSms');
 const User = require('../models/User');
 

@@ -2,8 +2,8 @@ const golos = require('golos-js');
 const core = require('gls-core-service');
 const BlockChainValues = core.utils.BlockChainValues;
 const Logger = core.utils.Logger;
-const env = require('../env');
-const locale = require('../locale');
+const env = require('../data/env');
+const locale = require('../data/locale');
 
 class Abstract {
     constructor({ connector }) {

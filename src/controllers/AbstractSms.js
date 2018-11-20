@@ -4,7 +4,7 @@ const Moments = core.utils.Moments;
 const Logger = core.utils.Logger;
 const errors = require('../utils/Errors');
 const Abstract = require('./Abstract');
-const env = require('../env');
+const env = require('../data/env');
 const User = require('../models/User');
 const LegacyUser = require('../models/LegacyUser');
 

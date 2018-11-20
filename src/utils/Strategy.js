@@ -1,6 +1,6 @@
 const core = require('gls-core-service');
 const Logger = core.utils.Logger;
-const env = require('../env');
+const env = require('../data/env');
 
 const STRATEGY_LIST = ['smsFromUser', 'smsToUser', 'mail', 'social'];
 

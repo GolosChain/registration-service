@@ -6,7 +6,7 @@ const BasicService = core.services.Basic;
 const Logger = core.utils.Logger;
 const stats = core.utils.statsClient;
 const errors = require('../utils/Errors');
-const env = require('../env');
+const env = require('../data/env');
 
 class SmsGate extends BasicService {
     constructor(smsc, twilio) {
