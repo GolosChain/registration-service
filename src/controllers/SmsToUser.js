@@ -15,6 +15,20 @@ class SmsToUser extends AbstractSms {
         this._smsGate = smsGate;
     }
 
+    async getState(recentModel) {
+        const state = await super.getState(recentModel);
+
+        if (state.currentState === 'verify') {
+            if (recentModel.smsCodeResendCount <= env.GLS_SMS_RESEND_CODE_MAX) {
+                state.nextSmsRetry = recentModel.smsCodeDate + env.GLS_SMS_RESEND_CODE_TIMEOUT;
+            } else {
+                state.nextSmsRetry = null;
+            }
+        }
+
+        return state;
+    }
+
     async firstStep({ user, phone, mail }, recentModel) {
         const recentState = this._handleRecentModel(recentModel, phone);
 
@@ -39,7 +53,10 @@ class SmsToUser extends AbstractSms {
             });
         });
 
-        return { strategy: 'smsToUser' };
+        return {
+            strategy: 'smsToUser',
+            nextSmsRetry: new Date() + env.GLS_SMS_RESEND_CODE_TIMEOUT,
+        };
     }
 
     async _sendSmsCode(model, phone) {
