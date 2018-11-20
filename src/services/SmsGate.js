@@ -2,10 +2,10 @@ const R = require('ramda');
 const micro = require('micro');
 const bodyParser = require('urlencoded-body-parser');
 const core = require('gls-core-service');
-const BasicService = core.service.Basic;
-const Logger = core.Logger;
-const stats = core.statsClient;
-const errors = core.HttpError;
+const BasicService = core.services.Basic;
+const Logger = core.utils.Logger;
+const stats = core.utils.statsClient;
+const errors = require('../utils/Errors');
 const env = require('../env');
 
 class SmsGate extends BasicService {

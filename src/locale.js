@@ -1,5 +1,5 @@
 const core = require('gls-core-service');
-const Template = core.Template;
+const Template = core.utils.Template;
 
 // prettier-ignore
 module.exports = Template.makeFor({
