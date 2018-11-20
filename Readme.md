@@ -47,9 +47,10 @@ API JSON-RPC:
      
  // Strategy-specific api    
      
- changePhone:        // Смена номера телефона (для стратегий smsFromUser, smsToUser).
-     user <string>   // Имя пользователя.
-     phone <string>  // Номер телефона.
+ changePhone:          // Смена номера телефона (для стратегий smsFromUser, smsToUser).
+     user <string>     // Имя пользователя.
+     phone <string>    // Номер телефона.
+     captcha <string>  // Ключ Google reCaptcha (для стратегии smsToUser).
      
  resendSmsCode:      // Переотравка кода подтверждения (для стратегии smsToUser).
      user <string>   // Имя пользователя.
