@@ -42,7 +42,7 @@ class SmsFromUser extends AbstractSms {
     }
 
     async _handleSms(phone) {
-        const timer = new Date();
+        const timer = Date.now();
         const model = await User.findOne(
             { strategy: 'smsFromUser', phone },
             {},
@@ -68,7 +68,7 @@ class SmsFromUser extends AbstractSms {
             // do nothing, notify late
         }
 
-        stats.timing('sms_from_user_verify', new Date() - timer);
+        stats.timing('sms_from_user_verify', Date.now() - timer);
     }
 
     async _notifyUserMobileAboutPhoneVerified(user, phone) {

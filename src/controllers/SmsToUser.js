@@ -109,7 +109,7 @@ class SmsToUser extends AbstractSms {
             throw errors.E409.error;
         }
 
-        if (new Date() - model.smsCodeDate < env.GLS_SMS_RESEND_CODE_TIMEOUT) {
+        if (Date.now() - model.smsCodeDate < env.GLS_SMS_RESEND_CODE_TIMEOUT) {
             throw { code: 429, message: 'Try late.' };
         }
 
@@ -130,7 +130,7 @@ class SmsToUser extends AbstractSms {
         if (model) {
             return +model.smsCodeDate + env.GLS_SMS_RESEND_CODE_TIMEOUT;
         } else {
-            return +new Date() + env.GLS_SMS_RESEND_CODE_TIMEOUT;
+            return Date.now() + env.GLS_SMS_RESEND_CODE_TIMEOUT;
         }
     }
 }
