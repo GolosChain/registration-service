@@ -1,8 +1,8 @@
 const core = require('gls-core-service');
-const errors = core.httpError;
-const stats = core.statsClient;
-const Logger = core.Logger;
-const locale = require('../locale');
+const errors = require('../utils/Errors');
+const stats = core.utils.statsClient;
+const Logger = core.utils.Logger;
+const locale = require('../data/locale');
 const AbstractSms = require('./AbstractSms');
 const User = require('../models/User');
 
@@ -42,7 +42,7 @@ class SmsFromUser extends AbstractSms {
     }
 
     async _handleSms(phone) {
-        const timer = new Date();
+        const timer = Date.now();
         const model = await User.findOne(
             { strategy: 'smsFromUser', phone },
             {},
@@ -68,7 +68,7 @@ class SmsFromUser extends AbstractSms {
             // do nothing, notify late
         }
 
-        stats.timing('sms_from_user_verify', new Date() - timer);
+        stats.timing('sms_from_user_verify', Date.now() - timer);
     }
 
     async _notifyUserMobileAboutPhoneVerified(user, phone) {

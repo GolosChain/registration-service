@@ -47,13 +47,13 @@ API JSON-RPC:
      
  // Strategy-specific api    
      
- changePhone:        // Смена номера телефона (для стратегий smsFromUser, smsToUser).
-     user <string>   // Имя пользователя.
-     phone <string>  // Номер телефона.
+ changePhone:          // Смена номера телефона (для стратегий smsFromUser, smsToUser).
+     user <string>     // Имя пользователя.
+     phone <string>    // Номер телефона.
+     captcha <string>  // Ключ Google reCaptcha (для стратегии smsToUser).
      
  resendSmsCode:      // Переотравка кода подтверждения (для стратегии smsToUser).
      user <string>   // Имя пользователя.
-     phone <string>  // Номер телефона.
      
  subscribeOnSmsGet:  // Подписка на факт получения СМС от юзера (для стратегии smsFromUser).
      user <string>   // Имя пользователя.
@@ -118,7 +118,10 @@ API SMS-GATE:
   - `GLS_GOOGLE_CAPTCHA_SECRET` *(обязательно)* - секретный ключ Google для reCaptcha.
   
   - `GLS_SMS_RESEND_CODE_TIMEOUT` - время, через которое можно повторно запросить отправку СМС-кода.  
-   Дефолтное значени - `45000` (измеряется в миллисекундах)
+   Дефолтное значение - `45000` (измеряется в миллисекундах)
+   
+  - `GLS_SMS_RESEND_CODE_MAX` - максимальное количество попыток переотправки смс кода.
+   Дефолтное значение - `3`
   
   - `GLS_REGISTRAR_KEY` *(обязательно)* - активный ключ регистратора аккаунтов.
   

@@ -1,10 +1,10 @@
 const random = require('random');
 const core = require('gls-core-service');
-const stats = core.statsClient;
-const Logger = core.Logger;
-const errors = core.httpError;
-const locale = require('../locale');
-const env = require('../env');
+const stats = core.utils.statsClient;
+const Logger = core.utils.Logger;
+const errors = require('../utils/Errors');
+const locale = require('../data/locale');
+const env = require('../data/env');
 const AbstractSms = require('./AbstractSms');
 const User = require('../models/User');
 
@@ -13,6 +13,20 @@ class SmsToUser extends AbstractSms {
         super({ connector });
 
         this._smsGate = smsGate;
+    }
+
+    async getState(recentModel) {
+        const state = await super.getState(recentModel);
+
+        if (state.currentState === 'verify') {
+            if (recentModel.smsCodeResendCount <= env.GLS_SMS_RESEND_CODE_MAX) {
+                state.nextSmsRetry = this._calcNextSmsRetry(recentModel);
+            } else {
+                state.nextSmsRetry = null;
+            }
+        }
+
+        return state;
     }
 
     async firstStep({ user, phone, mail }, recentModel) {
@@ -39,22 +53,21 @@ class SmsToUser extends AbstractSms {
             });
         });
 
-        return { strategy: 'smsToUser' };
+        return {
+            strategy: 'smsToUser',
+            nextSmsRetry: this._calcNextSmsRetry(),
+        };
     }
 
     async _sendSmsCode(model, phone) {
-        if (model.smsCodeDate - new Date() < env.GLS_SMS_RESEND_CODE_TIMEOUT) {
-            throw { code: 429, message: 'Try late.' };
-        }
-
         const lang = this._getLangBy(phone);
         const code = random.int(1000, 9999);
         const message = locale.sms.activationCode[lang]({ code });
 
         model.smsCode = code;
         model.smsCodeDate = new Date();
-        await model.save();
 
+        await model.save();
         await this._smsGate.sendTo(phone, message, lang);
     }
 
@@ -75,7 +88,19 @@ class SmsToUser extends AbstractSms {
         await model.save();
     }
 
-    async resendSmsCode({ model, phone }) {
+    async changePhone({ model, phone }) {
+        await super.changePhone({ model, phone });
+
+        model.smsCodeResendCount = 0;
+        model.smsCodeDate = new Date();
+
+        await model.save();
+        await this._sendSmsCode(model, model.phone);
+
+        return { nextSmsRetry: this._calcNextSmsRetry() };
+    }
+
+    async resendSmsCode({ model }) {
         if (!this._isActual(model)) {
             throw errors.E404.error;
         }
@@ -84,7 +109,29 @@ class SmsToUser extends AbstractSms {
             throw errors.E409.error;
         }
 
-        await this._sendSmsCode(model, phone);
+        if (Date.now() - model.smsCodeDate < env.GLS_SMS_RESEND_CODE_TIMEOUT) {
+            throw { code: 429, message: 'Try late.' };
+        }
+
+        if (model.smsCodeResendCount > env.GLS_SMS_RESEND_CODE_MAX) {
+            throw { code: 429, message: 'Too many retry.' };
+        }
+
+        model.smsCodeResendCount += 1;
+
+        await model.save();
+
+        await this._sendSmsCode(model, model.phone);
+
+        return { nextSmsRetry: this._calcNextSmsRetry(model) };
+    }
+
+    _calcNextSmsRetry(model = null) {
+        if (model) {
+            return +model.smsCodeDate + env.GLS_SMS_RESEND_CODE_TIMEOUT;
+        } else {
+            return Date.now() + env.GLS_SMS_RESEND_CODE_TIMEOUT;
+        }
     }
 }
 

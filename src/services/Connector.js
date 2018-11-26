@@ -2,10 +2,10 @@ const golos = require('golos-js');
 const request = require('request-promise-native');
 const core = require('gls-core-service');
 const BasicConnector = core.services.Connector;
-const errors = core.httpError;
-const stats = core.statsClient;
-const Logger = core.Logger;
-const env = require('../env');
+const stats = core.utils.statsClient;
+const Logger = core.utils.Logger;
+const errors = require('../utils/Errors');
+const env = require('../data/env');
 const SocialStrategy = require('../controllers/Social');
 const MailStrategy = require('../controllers/Mail');
 const SmsToUserStrategy = require('../controllers/SmsToUser');
@@ -71,7 +71,7 @@ class Connector extends BasicConnector {
     }
 
     async _getState({ user }) {
-        const timer = new Date();
+        const timer = Date.now();
 
         if (await this._isUserInBlockChain(user)) {
             return { currentState: 'registered' };
@@ -85,12 +85,12 @@ class Connector extends BasicConnector {
 
         const result = this._controllers[recentModel.strategy].getState(recentModel);
 
-        stats.timing('registration_get_state', new Date() - timer);
+        stats.timing('registration_get_state', Date.now() - timer);
         return result;
     }
 
     async _firstStep({ captcha, user, phone, mail }) {
-        const timer = new Date();
+        const timer = Date.now();
 
         await this._throwIfUserInBlockChain(user);
 
@@ -103,7 +103,7 @@ class Connector extends BasicConnector {
         const recentModel = await this._getUserModel(user);
         const result = await handler.firstStep({ user, phone, mail }, recentModel);
 
-        stats.timing('registration_first_step', new Date() - timer);
+        stats.timing('registration_first_step', Date.now() - timer);
         return result;
     }
 
@@ -137,31 +137,31 @@ class Connector extends BasicConnector {
     }
 
     async _verify({ user, ...data }) {
-        const timer = new Date();
+        const timer = Date.now();
 
         await this._throwIfUserInBlockChain(user);
 
         const model = await this._getUserModelOrThrow(user);
         const result = this._controllers[model.strategy].verify({ model, ...data });
 
-        stats.timing('registration_verify', new Date() - timer);
+        stats.timing('registration_verify', Date.now() - timer);
         return result;
     }
 
     async _toBlockChain({ user, ...keys }) {
-        const timer = new Date();
+        const timer = Date.now();
 
         await this._throwIfUserInBlockChain(user);
 
         const model = await this._getUserModelOrThrow(user);
         const result = this._controllers[model.strategy].toBlockChain({ model, ...keys });
 
-        stats.timing('registration_to_blockchain', new Date() - timer);
+        stats.timing('registration_to_blockchain', Date.now() - timer);
         return result;
     }
 
-    async _changePhone({ user, phone }) {
-        const timer = new Date();
+    async _changePhone({ user, phone, captcha = null }) {
+        const timer = Date.now();
 
         await this._throwIfUserInBlockChain(user);
 
@@ -169,14 +169,18 @@ class Connector extends BasicConnector {
 
         this._onlyStrategies(model, ['smsFromUser', 'smsToUser']);
 
+        if (env.GLS_CAPTCHA_ON && model.strategy === 'smsToUser') {
+            await this._checkCaptcha(captcha);
+        }
+
         const result = this._controllers[model.strategy].changePhone({ model, phone });
 
-        stats.timing('registration_change_phone', new Date() - timer);
+        stats.timing('registration_change_phone', Date.now() - timer);
         return result;
     }
 
     async _resendSmsCode({ user, phone }) {
-        const timer = new Date();
+        const timer = Date.now();
 
         await this._throwIfUserInBlockChain(user);
 
@@ -186,12 +190,12 @@ class Connector extends BasicConnector {
 
         const result = this._controllers[model.strategy].resendSmsCode({ model, phone });
 
-        stats.timing('registration_resend_sms_code', new Date() - timer);
+        stats.timing('registration_resend_sms_code', Date.now() - timer);
         return result;
     }
 
     async _subscribeOnSmsGet({ user, phone, channelId }) {
-        const timer = new Date();
+        const timer = Date.now();
 
         await this._throwIfUserInBlockChain(user);
 
@@ -202,7 +206,7 @@ class Connector extends BasicConnector {
         const target = this._controllers[model.strategy];
         const result = target.subscribeOnSmsGet({ user, phone, channelId });
 
-        stats.timing('registration_subscribe_on_sms_get', new Date() - timer);
+        stats.timing('registration_subscribe_on_sms_get', Date.now() - timer);
         return result;
     }
 

@@ -1,10 +1,10 @@
 const PhoneUtils = require('../utils/Phone');
 const core = require('gls-core-service');
 const Moments = core.utils.Moments;
-const errors = core.httpError;
 const Logger = core.utils.Logger;
+const errors = require('../utils/Errors');
 const Abstract = require('./Abstract');
-const env = require('../env');
+const env = require('../data/env');
 const User = require('../models/User');
 const LegacyUser = require('../models/LegacyUser');
 

@@ -1,5 +1,5 @@
 const request = require('request-promise-native');
-const env = require('../env');
+const env = require('../data/env');
 
 const SEND_POINT = 'https://smsc.ru/sys/send.php';
 const HISTORY_POINT = 'https://smsc.ru/sys/get.php';

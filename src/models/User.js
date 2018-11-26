@@ -1,5 +1,5 @@
 const core = require('gls-core-service');
-const MongoDB = core.service.MongoDB;
+const MongoDB = core.services.MongoDB;
 
 module.exports = MongoDB.makeModel(
     'User',
@@ -66,6 +66,10 @@ module.exports = MongoDB.makeModel(
         },
         smsCodeDate: {
             type: Date,
+        },
+        smsCodeResendCount: {
+            type: Number,
+            default: 0,
         },
 
         // Strategy - all (used for notify)

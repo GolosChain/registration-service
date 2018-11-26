@@ -1,9 +1,9 @@
 const core = require('gls-core-service');
 const BasicService = core.services.Basic;
 const Moments = core.utils.Moments;
-const Logger = core.Logger;
-const stats = core.statsClient;
-const env = require('../env');
+const Logger = core.utils.Logger;
+const stats = core.utils.statsClient;
+const env = require('../data/env');
 const User = require('../models/User');
 
 class SmsSecondCheck extends BasicService {
