@@ -12,6 +12,10 @@ class BalanceDog extends BasicService {
 
         this._connector = connector;
         this._inIteration = false;
+        this._isPaused = false;
+
+        connector.on('enableRegistrationByApi', this.resume.bind(this));
+        connector.on('disableRegistrationByApi', this.pause.bind(this));
     }
 
     async start() {
@@ -27,8 +31,20 @@ class BalanceDog extends BasicService {
         }
     }
 
+    pause() {
+        this._isPaused = true;
+    }
+
+    resume() {
+        this._isPaused = false;
+    }
+
+    isPaused() {
+        return this._isPaused;
+    }
+
     async iteration() {
-        if (this.isDone()) {
+        if (this.isDone() || this.isPaused()) {
             return;
         }
 
@@ -93,15 +109,23 @@ class BalanceDog extends BasicService {
     }
 
     async _tryEnableRegistration() {
-        if (!this._connector.isRegistrationEnabledDirect()) {
-            this._connector.enableRegistrationDirect();
+        if (this.isDone() || this.isPaused()) {
+            return;
+        }
+
+        if (!this._connector.isRegistrationEnabled()) {
+            this._connector.enableRegistration();
             Logger.info('Registration balance is ok, enable registration.');
         }
     }
 
     async _tryDisableRegistration() {
-        if (this._connector.isRegistrationEnabledDirect()) {
-            this._connector.disableRegistrationDirect();
+        if (this.isDone() || this.isPaused()) {
+            return;
+        }
+
+        if (this._connector.isRegistrationEnabled()) {
+            this._connector.disableRegistration();
             Logger.info('Registration balance is to low, disable registration!');
         }
     }

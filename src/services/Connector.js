@@ -49,9 +49,9 @@ class Connector extends BasicConnector {
                 // control api
                 getStrategyChoicer: this._getStrategyChoicer.bind(this),
                 setStrategyChoicer: this._setStrategyChoicer.bind(this),
-                enableRegistration: this._enableRegistration.bind(this),
-                disableRegistration: this._disableRegistration.bind(this),
-                isRegistrationEnabled: this._isRegistrationEnabled.bind(this),
+                enableRegistration: this._enableRegistrationByApi.bind(this),
+                disableRegistration: this._disableRegistrationByApi.bind(this),
+                isRegistrationEnabled: this._isRegistrationEnabledByApi.bind(this),
             },
             requiredClients: {
                 facade: env.GLS_FACADE_CONNECT,
@@ -60,15 +60,15 @@ class Connector extends BasicConnector {
         });
     }
 
-    enableRegistrationDirect() {
+    enableRegistration() {
         this._isEnabled = true;
     }
 
-    disableRegistrationDirect() {
+    disableRegistration() {
         this._isEnabled = false;
     }
 
-    isRegistrationEnabledDirect() {
+    isRegistrationEnabled() {
         return this._isEnabled;
     }
 
@@ -262,16 +262,18 @@ class Connector extends BasicConnector {
         this._strategyUtil.setStrategyChoicer(choicer, data);
     }
 
-    async _enableRegistration() {
-        this.enableRegistrationDirect();
+    async _enableRegistrationByApi() {
+        this.enableRegistration();
+        this.emit('enableRegistrationByApi');
     }
 
-    async _disableRegistration() {
-        this.disableRegistrationDirect();
+    async _disableRegistrationByApi() {
+        this.disableRegistration();
+        this.emit('disableRegistrationByApi');
     }
 
-    async _isRegistrationEnabled() {
-        return { enabled: this.isRegistrationEnabledDirect() };
+    async _isRegistrationEnabledByApi() {
+        return { enabled: this.isRegistrationEnabled() };
     }
 }
 
