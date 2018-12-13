@@ -1,3 +1,4 @@
+const sleep = require('then-sleep');
 const golos = require('golos-js');
 const core = require('gls-core-service');
 const BasicService = core.services.Basic;
@@ -10,6 +11,7 @@ class BalanceDog extends BasicService {
         super();
 
         this._connector = connector;
+        this._inIteration = false;
     }
 
     async start() {
@@ -17,10 +19,21 @@ class BalanceDog extends BasicService {
     }
 
     async stop() {
+        this.done();
         this.stopLoop();
+
+        while (this._inIteration) {
+            await sleep(0);
+        }
     }
 
     async iteration() {
+        if (this.isDone()) {
+            return;
+        }
+
+        this._inIteration = true;
+
         try {
             const { golosFee, golosPowerFee } = await this._getRegistrationFees();
             const { golosBalance, golosPowerBalance } = await this._getRegistrationBalance();
@@ -34,6 +47,8 @@ class BalanceDog extends BasicService {
         } catch (error) {
             Logger.error(`Balance dog error, but continue - ${error}`);
         }
+
+        this._inIteration = false;
     }
 
     async _getRegistrationFees() {
