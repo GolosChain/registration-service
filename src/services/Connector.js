@@ -49,15 +49,27 @@ class Connector extends BasicConnector {
                 // control api
                 getStrategyChoicer: this._getStrategyChoicer.bind(this),
                 setStrategyChoicer: this._setStrategyChoicer.bind(this),
-                enableRegistration: this._enableRegistration.bind(this),
-                disableRegistration: this._disableRegistration.bind(this),
-                isRegistrationEnabled: this._isRegistrationEnabled.bind(this),
+                enableRegistration: this._enableRegistrationByApi.bind(this),
+                disableRegistration: this._disableRegistrationByApi.bind(this),
+                isRegistrationEnabled: this._isRegistrationEnabledByApi.bind(this),
             },
             requiredClients: {
                 facade: env.GLS_FACADE_CONNECT,
                 mail: env.GLS_MAIL_CONNECT,
             },
         });
+    }
+
+    enableRegistration() {
+        this._isEnabled = true;
+    }
+
+    disableRegistration() {
+        this._isEnabled = false;
+    }
+
+    isRegistrationEnabled() {
+        return this._isEnabled;
     }
 
     _checkEnable(handler) {
@@ -250,16 +262,18 @@ class Connector extends BasicConnector {
         this._strategyUtil.setStrategyChoicer(choicer, data);
     }
 
-    async _enableRegistration() {
-        this._isEnabled = true;
+    async _enableRegistrationByApi() {
+        this.enableRegistration();
+        this.emit('enableRegistrationByApi');
     }
 
-    async _disableRegistration() {
-        this._isEnabled = false;
+    async _disableRegistrationByApi() {
+        this.disableRegistration();
+        this.emit('disableRegistrationByApi');
     }
 
-    async _isRegistrationEnabled() {
-        return { enabled: this._isEnabled };
+    async _isRegistrationEnabledByApi() {
+        return { enabled: this.isRegistrationEnabled() };
     }
 }
 

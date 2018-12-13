@@ -12,6 +12,7 @@ const SmsSecondCheck = require('./services/SmsSecondCheck');
 const Smsc = require('./utils/Smsc');
 const twilio = require('twilio')(env.GLS_SMS_GATE_SECRET_SID, env.GLS_TWILIO_SECRET);
 const LegacyUser = require('./models/LegacyUser');
+const BalanceDog = require('./services/BalanceDog');
 
 class Main extends BasicMain {
     constructor() {
@@ -21,11 +22,12 @@ class Main extends BasicMain {
         const smsGate = new SmsGate(smsc, twilio);
         const smsSecondCheck = new SmsSecondCheck(smsc, twilio);
         const connector = new Connector(smsGate, smsSecondCheck);
+        const balanceDog = new BalanceDog(connector);
 
         this._mongoDb = new MongoDB();
 
         this.printEnvBasedConfig(env);
-        this.addNested(smsGate, connector, smsSecondCheck);
+        this.addNested(balanceDog, smsGate, smsSecondCheck, connector);
     }
 
     async start() {
