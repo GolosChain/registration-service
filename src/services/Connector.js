@@ -60,6 +60,18 @@ class Connector extends BasicConnector {
         });
     }
 
+    enableRegistrationDirect() {
+        this._isEnabled = true;
+    }
+
+    disableRegistrationDirect() {
+        this._isEnabled = false;
+    }
+
+    isRegistrationEnabledDirect() {
+        return this._isEnabled;
+    }
+
     _checkEnable(handler) {
         return async (...params) => {
             if (this._isEnabled) {
@@ -251,15 +263,15 @@ class Connector extends BasicConnector {
     }
 
     async _enableRegistration() {
-        this._isEnabled = true;
+        this.enableRegistrationDirect();
     }
 
     async _disableRegistration() {
-        this._isEnabled = false;
+        this.disableRegistrationDirect();
     }
 
     async _isRegistrationEnabled() {
-        return { enabled: this._isEnabled };
+        return { enabled: this.isRegistrationEnabledDirect() };
     }
 }
 
