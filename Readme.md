@@ -60,6 +60,15 @@ subscribeOnSmsGet:  // Подписка на факт получения СМС 
     user <string>   // Имя пользователя.
     phone <string>  // Номер телефона.
 
+// Sms receiver api
+
+incomingSms:               // Обработка входящей смс от пользователя
+    phone <string>         // Номер телефона
+
+recentSmsList:             // Обработка всех ранее полученных смс (для проверки на случай ошибок)
+    list: <Array<Object>>  // Массив объектов смс
+        phone <string>     // Номер телефона
+
 // Control api
 
 getStrategyChoicer:              // Возвращает способ выбора стратегии для регистрации и сопутствующие данные
