@@ -16,7 +16,7 @@ const User = require('../models/User');
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
 
 class Connector extends BasicConnector {
-    constructor(smsGate, smsSecondCheck) {
+    constructor() {
         super();
 
         this._controllers = {

@@ -1,6 +1,7 @@
 // Описание переменных окружения смотри в Readme.
 const env = process.env;
 
+// TODO Remove unused (+ docs)
 module.exports = {
     GLS_SMS_VERIFY_EXPIRATION_HOURS: Number(env.GLS_SMS_VERIFY_EXPIRATION_HOURS) || 1,
     GLS_GOOGLE_CAPTCHA_SECRET: env.GLS_GOOGLE_CAPTCHA_SECRET,

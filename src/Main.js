@@ -7,10 +7,6 @@ const MongoDB = core.services.MongoDB;
 const Logger = core.utils.Logger;
 const env = require('./data/env');
 const Connector = require('./services/Connector');
-const SmsGate = require('./services/SmsGate');
-const SmsSecondCheck = require('./services/SmsSecondCheck');
-const Smsc = require('./utils/Smsc');
-const twilio = require('twilio')(env.GLS_SMS_GATE_SECRET_SID, env.GLS_TWILIO_SECRET);
 const LegacyUser = require('./models/LegacyUser');
 const BalanceDog = require('./services/BalanceDog');
 
@@ -18,15 +14,12 @@ class Main extends BasicMain {
     constructor() {
         super(stats, env);
 
-        const smsc = new Smsc();
-        const smsGate = new SmsGate(smsc, twilio);
-        const smsSecondCheck = new SmsSecondCheck(smsc, twilio);
-        const connector = new Connector(smsGate, smsSecondCheck);
+        const connector = new Connector();
         const balanceDog = new BalanceDog(connector);
 
         this._mongoDb = new MongoDB();
 
-        this.addNested(balanceDog, smsGate, smsSecondCheck, connector);
+        this.addNested(balanceDog, connector);
         this.defineMeta({ name: 'registration' });
     }
 
