@@ -41,7 +41,7 @@ class SmsFromUser extends AbstractSms {
         throw errors.E406.error;
     }
 
-    async _handleSms(phone) {
+    async handleIncomingSms({ phone }) {
         const timer = Date.now();
         const model = await User.findOne(
             { strategy: 'smsFromUser', phone },
@@ -69,6 +69,20 @@ class SmsFromUser extends AbstractSms {
         }
 
         stats.timing('sms_from_user_verify', Date.now() - timer);
+    }
+
+    async handleRecentSmsList({ list }) {
+        for (const phone of list) {
+            const count = await User.countDocuments({
+                strategy: 'smsFromUser',
+                phone,
+                isPhoneVerified: false,
+            });
+
+            if (count) {
+                await this.handleIncomingSms({ phone });
+            }
+        }
     }
 
     async _notifyUserMobileAboutPhoneVerified(user, phone) {

@@ -46,6 +46,10 @@ class Connector extends BasicConnector {
                 resendSmsCode: checkEnable(this._resendSmsCode),
                 subscribeOnSmsGet: checkEnable(this._subscribeOnSmsGet),
 
+                // sms receiver api
+                incomingSms: checkEnable(this._incomingSms),
+                recentSmsList: checkEnable(this._recentSmsList),
+
                 // control api
                 getStrategyChoicer: this._getStrategyChoicer.bind(this),
                 setStrategyChoicer: this._setStrategyChoicer.bind(this),
@@ -275,6 +279,14 @@ class Connector extends BasicConnector {
 
     async _isRegistrationEnabledByApi() {
         return { enabled: this.isRegistrationEnabled() };
+    }
+
+    async _incomingSms({ phone }) {
+        await this.smsFromUser.handleIncomingSms({ phone });
+    }
+
+    async _recentSmsList({ list }) {
+        await this.smsFromUser.handleRecentSmsList({ list });
     }
 }
 
