@@ -11,10 +11,6 @@ class SmsFromUser extends AbstractSms {
         super(...args);
 
         this._subscribes = new Map();
-
-        // TODO -
-        smsGate.on('incoming', this._handleSms.bind(this));
-        smsSecondCheck.on('sms', this._handleSms.bind(this));
     }
 
     async firstStep({ user, phone, mail }, recentModel) {
