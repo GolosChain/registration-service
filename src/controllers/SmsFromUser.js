@@ -7,13 +7,13 @@ const AbstractSms = require('./AbstractSms');
 const User = require('../models/User');
 
 class SmsFromUser extends AbstractSms {
-    constructor(connector, smsGate, smsSecondCheck) {
-        super({ connector });
+    constructor(...args) {
+        super(...args);
 
-        this._smsGate = smsGate;
-        this._smsGate.on('incoming', this._handleSms.bind(this));
         this._subscribes = new Map();
 
+        // TODO -
+        smsGate.on('incoming', this._handleSms.bind(this));
         smsSecondCheck.on('sms', this._handleSms.bind(this));
     }
 

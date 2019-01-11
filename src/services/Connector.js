@@ -20,10 +20,10 @@ class Connector extends BasicConnector {
         super();
 
         this._controllers = {
-            social: new SocialStrategy(this),
-            mail: new MailStrategy(this),
-            smsToUser: new SmsToUserStrategy(this, smsGate),
-            smsFromUser: new SmsFromUserStrategy(this, smsGate, smsSecondCheck),
+            social: new SocialStrategy({ connector: this }),
+            mail: new MailStrategy({ connector: this }),
+            smsToUser: new SmsToUserStrategy({ connector: this }),
+            smsFromUser: new SmsFromUserStrategy({ connector: this }),
         };
 
         this._strategyUtil = new StrategyUtil();
