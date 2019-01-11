@@ -44,6 +44,25 @@ class SmsGate extends BasicService {
         return new Promise(resolve => this._server.close(resolve));
     }
 
+    async sendTo(phone, message, targetLang) {
+        switch (targetLang) {
+            case 'ru':
+                await this._smsc.send(phone, message);
+                break;
+
+            default:
+                const from = env.GLS_TWILIO_PHONE_FROM;
+                const to = `+${phone}`;
+
+                try {
+                    await this._twilio.messages.create({ from, to, body: message });
+                } catch (error) {
+                    Logger.error(`Twilio sms send error - ${error}`);
+                    stats.increment('twilio_sms_send_error');
+                }
+        }
+    }
+
     async _handleSmsFromUser(req, res) {
         try {
             const data = await this._tryExtractRequestData(req, res);
@@ -118,25 +137,6 @@ class SmsGate extends BasicService {
         const { code, message } = errors[`E${errorCode}`].error;
 
         micro.send(res, code, message);
-    }
-
-    async sendTo(phone, message, targetLang) {
-        switch (targetLang) {
-            case 'ru':
-                await this._smsc.send(phone, message);
-                break;
-
-            default:
-                const from = env.GLS_TWILIO_PHONE_FROM;
-                const to = `+${phone}`;
-
-                try {
-                    await this._twilio.messages.create({ from, to, body: message });
-                } catch (error) {
-                    Logger.error(`Twilio sms send error - ${error}`);
-                    stats.increment('twilio_sms_send_error');
-                }
-        }
     }
 }
 

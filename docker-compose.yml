@@ -1,21 +1,21 @@
 version: '3.6'
 services:
-  mongo:
-    container_name: mongo
+  registration-mongo:
+    container_name: registration-mongo
     image: mongo
     restart: always
     volumes:
-      - mongodb_vol:/data/db
+      - registration_mongodb_vol:/data/db
     ports:
       - $GLS_MONGO_EXTERNAL_HOST:$GLS_MONGO_EXTERNAL_PORT:27017
     networks:
       - services-tier
 
-  node:
-    container_name: node
+  registration-node:
+    container_name: registration-node
     restart: always
     depends_on:
-      - mongo
+      - registration-mongo
     build:
       context: .
       dockerfile: Dockerfile
@@ -60,7 +60,7 @@ services:
       - GLS_MIN_REGISTRATIONS_BEFORE_BANKRUPT
 
 volumes:
-  mongodb_vol:
+  registration-mongo:
 
 networks:
   services-tier:
