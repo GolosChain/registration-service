@@ -56,6 +56,7 @@ class Connector extends BasicConnector {
             requiredClients: {
                 facade: env.GLS_FACADE_CONNECT,
                 mail: env.GLS_MAIL_CONNECT,
+                sms: env.GLS_SMS_CONNECT,
             },
         });
     }

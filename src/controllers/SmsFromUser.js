@@ -76,8 +76,7 @@ class SmsFromUser extends AbstractSms {
             const lang = this._getLangBy(phone);
             const message = locale.sms.successVerification[lang]();
 
-            this._smsGate.sendTo(phone, message, lang).catch(error => {
-                stats.increment('send_success_sms_error');
+            this.callService('sms', 'plainSms', { phone, message, lang }).catch(error => {
                 Logger.error(`Send success sms error - ${error}`);
             });
         });

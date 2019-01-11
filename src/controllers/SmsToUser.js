@@ -9,12 +9,6 @@ const AbstractSms = require('./AbstractSms');
 const User = require('../models/User');
 
 class SmsToUser extends AbstractSms {
-    constructor(connector, smsGate) {
-        super({ connector });
-
-        this._smsGate = smsGate;
-    }
-
     async getState(recentModel) {
         const state = await super.getState(recentModel);
 
@@ -48,7 +42,6 @@ class SmsToUser extends AbstractSms {
 
         setImmediate(() => {
             this._sendSmsCode(model, phone).catch(error => {
-                stats.increment('send_sms_code_error');
                 Logger.error(`Send sms code error - ${error}`);
             });
         });
@@ -68,7 +61,7 @@ class SmsToUser extends AbstractSms {
         model.smsCodeDate = new Date();
 
         await model.save();
-        await this._smsGate.sendTo(phone, message, lang);
+        await this.callService('sms', 'plainSms', { phone, message, lang });
     }
 
     async verify({ model, code }) {
