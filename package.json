@@ -24,16 +24,16 @@
     },
     "homepage": "https://github.com/GolosChain/registration-service#readme",
     "dependencies": {
-        "gls-core-service": "^2.13.4",
-        "golos-js": "^0.7.6",
-        "jayson": "^2.1.0",
+        "gls-core-service": "^2.16.1",
+        "golos-js": "^0.7.7",
+        "jayson": "^2.1.1",
         "micro": "^9.3.3",
         "ramda": "^0.25.0",
-        "random": "^2.0.12",
+        "random": "^2.0.13",
         "request": "^2.88.0",
         "request-promise-native": "^1.0.5",
         "then-sleep": "^1.0.1",
-        "twilio": "^3.25.0",
+        "twilio": "^3.26.1",
         "urlencoded-body-parser": "^2.0.1"
     }
 }
