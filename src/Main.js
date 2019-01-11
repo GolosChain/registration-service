@@ -16,7 +16,7 @@ const BalanceDog = require('./services/BalanceDog');
 
 class Main extends BasicMain {
     constructor() {
-        super(stats);
+        super(stats, env);
 
         const smsc = new Smsc();
         const smsGate = new SmsGate(smsc, twilio);
@@ -26,8 +26,8 @@ class Main extends BasicMain {
 
         this._mongoDb = new MongoDB();
 
-        this.printEnvBasedConfig(env);
         this.addNested(balanceDog, smsGate, smsSecondCheck, connector);
+        this.defineMeta({ name: 'registration' });
     }
 
     async start() {
@@ -42,7 +42,7 @@ class Main extends BasicMain {
             await this._restoreLegacyUsers();
             Logger.info('Restore done!');
         } else {
-            Logger.info('Legacy users already loaded, ok.')
+            Logger.info('Legacy users already loaded, ok.');
         }
 
         await super.start();

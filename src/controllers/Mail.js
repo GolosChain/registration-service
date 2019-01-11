@@ -1,10 +1,6 @@
 const Abstract = require('./Abstract');
 
 class Mail extends Abstract {
-    constructor(connector) {
-        super({ connector });
-    }
-
     async getState() {
         throw { code: 501, message: 'Not implemented for this version' };
     }

@@ -1,19 +1,12 @@
 const golos = require('golos-js');
 const core = require('gls-core-service');
+const BasicController = core.controllers.Basic;
 const BlockChainValues = core.utils.BlockChainValues;
 const Logger = core.utils.Logger;
 const env = require('../data/env');
 const locale = require('../data/locale');
 
-class Abstract {
-    constructor({ connector }) {
-        this.connector = connector;
-    }
-
-    async sendTo(...args) {
-        return await this.connector.sendTo(...args);
-    }
-
+class Abstract extends BasicController {
     async getState() {
         throw 'Not implemented';
     }
