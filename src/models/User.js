@@ -84,8 +84,6 @@ module.exports = MongoDB.makeModel(
             type: Boolean,
             default: false,
         },
-
-        // TODO Another sections for another strategies
     },
     {
         index: [
@@ -115,7 +113,6 @@ module.exports = MongoDB.makeModel(
                     sparse: true,
                 },
             },
-            // TODO Another indexes for another strategies
         ],
     }
 );

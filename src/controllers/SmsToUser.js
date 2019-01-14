@@ -1,6 +1,5 @@
 const random = require('random');
 const core = require('gls-core-service');
-const stats = core.utils.statsClient;
 const Logger = core.utils.Logger;
 const errors = require('../utils/Errors');
 const locale = require('../data/locale');
