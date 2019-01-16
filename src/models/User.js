@@ -84,6 +84,12 @@ module.exports = MongoDB.makeModel(
             type: Boolean,
             default: false,
         },
+
+        // Tests
+        isTestingSystem: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         index: [

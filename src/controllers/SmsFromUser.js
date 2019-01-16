@@ -13,7 +13,7 @@ class SmsFromUser extends AbstractSms {
         this._subscribes = new Map();
     }
 
-    async firstStep({ user, phone, mail }, recentModel) {
+    async firstStep({ user, phone, mail, isTestingSystem }, recentModel) {
         const recentState = this._handleRecentModel(recentModel, phone);
 
         if (recentState) {
@@ -22,7 +22,13 @@ class SmsFromUser extends AbstractSms {
 
         await this._throwIfPhoneDuplicate(user, phone, 'smsFromUser');
 
-        const model = new User({ user, phone, mail, strategy: 'smsFromUser' });
+        const model = new User({
+            user,
+            phone,
+            mail,
+            strategy: 'smsFromUser',
+            isTestingSystem,
+        });
 
         try {
             await model.save();

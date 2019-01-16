@@ -108,17 +108,18 @@ class Connector extends BasicConnector {
 
     async _firstStep({ captcha, user, phone, mail, testingPass = null }) {
         const timer = Date.now();
+        const isTestingSystem = this._isTestingSystem(testingPass);
 
         await this._throwIfUserInBlockChain(user);
 
-        if (env.GLS_CAPTCHA_ON && !this._isTestingSystem(testingPass)) {
+        if (env.GLS_CAPTCHA_ON && !isTestingSystem) {
             await this._checkCaptcha(captcha);
         }
 
         const strategy = await this._choiceStrategy();
         const handler = this._controllers[strategy];
         const recentModel = await this._getUserModel(user);
-        const result = await handler.firstStep({ user, phone, mail }, recentModel);
+        const result = await handler.firstStep({ user, phone, mail, isTestingSystem }, recentModel);
 
         stats.timing('registration_first_step', Date.now() - timer);
         return result;
