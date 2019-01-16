@@ -177,7 +177,7 @@ class Connector extends BasicConnector {
         return result;
     }
 
-    async _changePhone({ user, phone, captcha = null }) {
+    async _changePhone({ user, phone, captcha = null, testingPass }) {
         const timer = Date.now();
 
         await this._throwIfUserInBlockChain(user);
@@ -186,7 +186,11 @@ class Connector extends BasicConnector {
 
         this._onlyStrategies(model, ['smsFromUser', 'smsToUser']);
 
-        if (env.GLS_CAPTCHA_ON && model.strategy === 'smsToUser') {
+        if (
+            env.GLS_CAPTCHA_ON &&
+            model.strategy === 'smsToUser' &&
+            testingPass !== env.GLS_TESTING_PASS
+        ) {
             await this._checkCaptcha(captcha);
         }
 
