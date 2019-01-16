@@ -106,12 +106,12 @@ class Connector extends BasicConnector {
         return result;
     }
 
-    async _firstStep({ captcha, user, phone, mail }) {
+    async _firstStep({ captcha, user, phone, mail, testingPass = null }) {
         const timer = Date.now();
 
         await this._throwIfUserInBlockChain(user);
 
-        if (env.GLS_CAPTCHA_ON) {
+        if (env.GLS_CAPTCHA_ON && !this._isTestingSystem(testingPass)) {
             await this._checkCaptcha(captcha);
         }
 
@@ -177,7 +177,7 @@ class Connector extends BasicConnector {
         return result;
     }
 
-    async _changePhone({ user, phone, captcha = null, testingPass }) {
+    async _changePhone({ user, phone, captcha = null, testingPass = null }) {
         const timer = Date.now();
 
         await this._throwIfUserInBlockChain(user);
@@ -189,7 +189,7 @@ class Connector extends BasicConnector {
         if (
             env.GLS_CAPTCHA_ON &&
             model.strategy === 'smsToUser' &&
-            testingPass !== env.GLS_TESTING_PASS
+            !this._isTestingSystem(testingPass)
         ) {
             await this._checkCaptcha(captcha);
         }
@@ -291,6 +291,14 @@ class Connector extends BasicConnector {
 
     async _recentSmsList({ list }) {
         await this.smsFromUser.handleRecentSmsList({ list });
+    }
+
+    _isTestingSystem(testingPass) {
+        if (!testingPass || !env.GLS_TESTING_PASS) {
+            return false;
+        }
+
+        return testingPass === env.GLS_TESTING_PASS;
     }
 }
 
