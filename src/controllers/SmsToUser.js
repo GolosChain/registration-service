@@ -45,6 +45,14 @@ class SmsToUser extends AbstractSms {
             throw { code: 400, message: error.message };
         }
 
+        if (isTestingSystem) {
+            return {
+                code: await this._makeAndApplyTestingSmsCode(model),
+                strategy: 'smsToUser',
+                nextSmsRetry: this._calcNextSmsRetry(),
+            };
+        }
+
         setImmediate(() => {
             this._sendSmsCode(model, phone).catch(error => {
                 Logger.error(`Send sms code error - ${error}`);
@@ -57,16 +65,32 @@ class SmsToUser extends AbstractSms {
         };
     }
 
+    async _makeAndApplyTestingSmsCode(model) {
+        const code = this._makeSmsCode();
+
+        await this._applySmsCode(model, code);
+
+        return code;
+    }
+
     async _sendSmsCode(model, phone) {
         const lang = this._getLangBy(phone);
-        const code = random.int(1000, 9999);
+        const code = this._makeSmsCode();
         const message = locale.sms.activationCode[lang]({ code });
 
+        await this._applySmsCode(model, code);
+        await this.callService('sms', 'plainSms', { phone, message, lang });
+    }
+
+    _makeSmsCode() {
+        return random.int(1000, 9999);
+    }
+
+    async _applySmsCode(model, code) {
         model.smsCode = code;
         model.smsCodeDate = new Date();
 
         await model.save();
-        await this.callService('sms', 'plainSms', { phone, message, lang });
     }
 
     async verify({ model, code }) {
@@ -93,7 +117,10 @@ class SmsToUser extends AbstractSms {
         model.smsCodeDate = new Date();
 
         await model.save();
-        await this._sendSmsCode(model, model.phone);
+
+        if (!model.isTestingSystem) {
+            await this._sendSmsCode(model, model.phone);
+        }
 
         return { nextSmsRetry: this._calcNextSmsRetry() };
     }
@@ -119,7 +146,9 @@ class SmsToUser extends AbstractSms {
 
         await model.save();
 
-        await this._sendSmsCode(model, model.phone);
+        if (!model.isTestingSystem) {
+            await this._sendSmsCode(model, model.phone);
+        }
 
         return { nextSmsRetry: this._calcNextSmsRetry(model) };
     }
