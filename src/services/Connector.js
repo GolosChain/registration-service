@@ -56,6 +56,7 @@ class Connector extends BasicConnector {
                 enableRegistration: this._enableRegistrationByApi.bind(this),
                 disableRegistration: this._disableRegistrationByApi.bind(this),
                 isRegistrationEnabled: this._isRegistrationEnabledByApi.bind(this),
+                deleteAccount: this._deleteAccount.bind(this),
             },
             requiredClients: {
                 facade: env.GLS_FACADE_CONNECT,
@@ -63,6 +64,14 @@ class Connector extends BasicConnector {
                 sms: env.GLS_SMS_CONNECT,
             },
         });
+    }
+
+    async _deleteAccount({ targetUser, testingPass = null }) {
+        if (!targetUser || !this._isTestingSystem(testingPass)) {
+            throw { code: 403, message: 'Access denied' };
+        }
+
+        await User.remove({ name: targetUser, isTestingSystem: true });
     }
 
     enableRegistration() {
