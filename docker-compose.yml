@@ -28,7 +28,7 @@ services:
       - .env
 
 volumes:
-  registration-mongo:
+  registration_mongodb_vol:
 
 networks:
   services-tier:

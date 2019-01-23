@@ -307,11 +307,11 @@ class Connector extends BasicConnector {
     }
 
     async _incomingSms({ phone }) {
-        await this.smsFromUser.handleIncomingSms({ phone });
+        await this._controllers.smsFromUser.handleIncomingSms({ phone });
     }
 
     async _recentSmsList({ list }) {
-        await this.smsFromUser.handleRecentSmsList({ list });
+        await this._controllers.smsFromUser.handleRecentSmsList({ list });
     }
 
     _isTestingSystem(testingPass) {
