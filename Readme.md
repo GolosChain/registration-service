@@ -37,9 +37,9 @@ firstStep:                // Первый шаг регистрации.
     testingPass <string>  // Пароль, отключающий проверку на капчу
                           // и помечающий телефон как тестовый.
 
-verify:               // Второй шаг регистрации, верификация аккаунта (кроме стратегии smsFromUser).
-    user <string>     // Имя пользователя.
-    code <number>     // СМС-код (для стратегий smsFromUser, smsToUser).
+verify:                   // Второй шаг регистрации, верификация аккаунта (кроме стратегии smsFromUser).
+    user <string>         // Имя пользователя.
+    code <number/string>  // СМС-код (для стратегий smsFromUser, smsToUser).
 
 toBlockChain:         // Третий шаг регистрации, запись в блокчейн.
     user <string>     // Имя пользователя.

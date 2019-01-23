@@ -74,7 +74,7 @@ class SmsFromUser extends AbstractSms {
     }
 
     async handleRecentSmsList({ list }) {
-        for (const phone of list) {
+        for (const { phone } of list) {
             const count = await User.countDocuments({
                 strategy: 'smsFromUser',
                 phone,

@@ -94,6 +94,8 @@ class SmsToUser extends AbstractSms {
     }
 
     async verify({ model, code }) {
+        code = String(code);
+
         if (!this._isActual(model)) {
             throw errors.E404.error;
         }
