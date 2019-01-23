@@ -71,7 +71,7 @@ class Connector extends BasicConnector {
             throw { code: 403, message: 'Access denied' };
         }
 
-        await User.remove({ name: targetUser, isTestingSystem: true });
+        await User.deleteOne({ user: targetUser, isTestingSystem: true });
     }
 
     enableRegistration() {
