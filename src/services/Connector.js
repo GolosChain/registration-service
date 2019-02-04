@@ -57,6 +57,7 @@ class Connector extends BasicConnector {
                 disableRegistration: this._disableRegistrationByApi.bind(this),
                 isRegistrationEnabled: this._isRegistrationEnabledByApi.bind(this),
                 deleteAccount: this._deleteAccount.bind(this),
+                isRegistered: this.isRegistered.bind(this),
             },
             requiredClients: {
                 facade: env.GLS_FACADE_CONNECT,
@@ -320,6 +321,16 @@ class Connector extends BasicConnector {
         }
 
         return testingPass === env.GLS_TESTING_PASS;
+    }
+
+    async isRegistered(username) {
+        const user = await User.findOne({ user: username });
+
+        if (user && user.registered) {
+            return true;
+        }
+
+        return false;
     }
 }
 
