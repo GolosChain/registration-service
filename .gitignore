@@ -3,4 +3,3 @@ node_modules
 db
 .env
 legacy-phones.csv
-.vscode
