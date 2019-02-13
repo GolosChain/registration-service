@@ -16,14 +16,14 @@ const User = require('../models/User');
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
 
 class Connector extends BasicConnector {
-    constructor(smsGate, smsSecondCheck) {
+    constructor() {
         super();
 
         this._controllers = {
-            social: new SocialStrategy(this),
-            mail: new MailStrategy(this),
-            smsToUser: new SmsToUserStrategy(this, smsGate),
-            smsFromUser: new SmsFromUserStrategy(this, smsGate, smsSecondCheck),
+            social: new SocialStrategy({ connector: this }),
+            mail: new MailStrategy({ connector: this }),
+            smsToUser: new SmsToUserStrategy({ connector: this }),
+            smsFromUser: new SmsFromUserStrategy({ connector: this }),
         };
 
         this._strategyUtil = new StrategyUtil();
@@ -46,18 +46,32 @@ class Connector extends BasicConnector {
                 resendSmsCode: checkEnable(this._resendSmsCode),
                 subscribeOnSmsGet: checkEnable(this._subscribeOnSmsGet),
 
+                // sms receiver api
+                incomingSms: checkEnable(this._incomingSms),
+                recentSmsList: checkEnable(this._recentSmsList),
+
                 // control api
                 getStrategyChoicer: this._getStrategyChoicer.bind(this),
                 setStrategyChoicer: this._setStrategyChoicer.bind(this),
                 enableRegistration: this._enableRegistrationByApi.bind(this),
                 disableRegistration: this._disableRegistrationByApi.bind(this),
                 isRegistrationEnabled: this._isRegistrationEnabledByApi.bind(this),
+                deleteAccount: this._deleteAccount.bind(this),
             },
             requiredClients: {
                 facade: env.GLS_FACADE_CONNECT,
                 mail: env.GLS_MAIL_CONNECT,
+                sms: env.GLS_SMS_CONNECT,
             },
         });
+    }
+
+    async _deleteAccount({ targetUser, testingPass = null }) {
+        if (!targetUser || !this._isTestingSystem(testingPass)) {
+            throw { code: 403, message: 'Access denied' };
+        }
+
+        await User.deleteOne({ user: targetUser, isTestingSystem: true });
     }
 
     enableRegistration() {
@@ -101,19 +115,31 @@ class Connector extends BasicConnector {
         return result;
     }
 
-    async _firstStep({ captcha, user, phone, mail }) {
+    async _firstStep({ captcha, user, phone, mail, testingPass = null }) {
+        if (
+            !user ||
+            typeof user !== 'string' ||
+            !phone ||
+            typeof phone !== 'string' ||
+            !mail ||
+            typeof mail !== 'string'
+        ) {
+            throw { code: 400, message: 'Invalid params' };
+        }
+
         const timer = Date.now();
+        const isTestingSystem = this._isTestingSystem(testingPass);
 
         await this._throwIfUserInBlockChain(user);
 
-        if (env.GLS_CAPTCHA_ON) {
+        if (env.GLS_CAPTCHA_ON && !isTestingSystem) {
             await this._checkCaptcha(captcha);
         }
 
         const strategy = await this._choiceStrategy();
         const handler = this._controllers[strategy];
         const recentModel = await this._getUserModel(user);
-        const result = await handler.firstStep({ user, phone, mail }, recentModel);
+        const result = await handler.firstStep({ user, phone, mail, isTestingSystem }, recentModel);
 
         stats.timing('registration_first_step', Date.now() - timer);
         return result;
@@ -172,7 +198,7 @@ class Connector extends BasicConnector {
         return result;
     }
 
-    async _changePhone({ user, phone, captcha = null }) {
+    async _changePhone({ user, phone, captcha = null, testingPass = null }) {
         const timer = Date.now();
 
         await this._throwIfUserInBlockChain(user);
@@ -181,7 +207,11 @@ class Connector extends BasicConnector {
 
         this._onlyStrategies(model, ['smsFromUser', 'smsToUser']);
 
-        if (env.GLS_CAPTCHA_ON && model.strategy === 'smsToUser') {
+        if (
+            env.GLS_CAPTCHA_ON &&
+            model.strategy === 'smsToUser' &&
+            !this._isTestingSystem(testingPass)
+        ) {
             await this._checkCaptcha(captcha);
         }
 
@@ -274,6 +304,22 @@ class Connector extends BasicConnector {
 
     async _isRegistrationEnabledByApi() {
         return { enabled: this.isRegistrationEnabled() };
+    }
+
+    async _incomingSms({ phone }) {
+        await this._controllers.smsFromUser.handleIncomingSms({ phone });
+    }
+
+    async _recentSmsList({ list }) {
+        await this._controllers.smsFromUser.handleRecentSmsList({ list });
+    }
+
+    _isTestingSystem(testingPass) {
+        if (!testingPass || !env.GLS_TESTING_PASS) {
+            return false;
+        }
+
+        return testingPass === env.GLS_TESTING_PASS;
     }
 }
 

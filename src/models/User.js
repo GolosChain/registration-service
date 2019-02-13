@@ -85,7 +85,11 @@ module.exports = MongoDB.makeModel(
             default: false,
         },
 
-        // TODO Another sections for another strategies
+        // Tests
+        isTestingSystem: {
+            type: Boolean,
+            default: false,
+        },
     },
     {
         index: [
@@ -115,7 +119,6 @@ module.exports = MongoDB.makeModel(
                     sparse: true,
                 },
             },
-            // TODO Another indexes for another strategies
         ],
     }
 );

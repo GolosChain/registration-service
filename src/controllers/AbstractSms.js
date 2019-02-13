@@ -127,7 +127,7 @@ class AbstractSms extends Abstract {
 
             case /^375/.test(phone):
                 return 'by';
-                
+
             default:
                 return 'en';
         }

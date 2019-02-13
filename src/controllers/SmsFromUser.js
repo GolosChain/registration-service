@@ -7,17 +7,13 @@ const AbstractSms = require('./AbstractSms');
 const User = require('../models/User');
 
 class SmsFromUser extends AbstractSms {
-    constructor(connector, smsGate, smsSecondCheck) {
-        super({ connector });
+    constructor(...args) {
+        super(...args);
 
-        this._smsGate = smsGate;
-        this._smsGate.on('incoming', this._handleSms.bind(this));
         this._subscribes = new Map();
-
-        smsSecondCheck.on('sms', this._handleSms.bind(this));
     }
 
-    async firstStep({ user, phone, mail }, recentModel) {
+    async firstStep({ user, phone, mail, isTestingSystem }, recentModel) {
         const recentState = this._handleRecentModel(recentModel, phone);
 
         if (recentState) {
@@ -26,7 +22,13 @@ class SmsFromUser extends AbstractSms {
 
         await this._throwIfPhoneDuplicate(user, phone, 'smsFromUser');
 
-        const model = new User({ user, phone, mail, strategy: 'smsFromUser' });
+        const model = new User({
+            user,
+            phone,
+            mail,
+            strategy: 'smsFromUser',
+            isTestingSystem,
+        });
 
         try {
             await model.save();
@@ -41,7 +43,7 @@ class SmsFromUser extends AbstractSms {
         throw errors.E406.error;
     }
 
-    async _handleSms(phone) {
+    async handleIncomingSms({ phone }) {
         const timer = Date.now();
         const model = await User.findOne(
             { strategy: 'smsFromUser', phone },
@@ -71,13 +73,26 @@ class SmsFromUser extends AbstractSms {
         stats.timing('sms_from_user_verify', Date.now() - timer);
     }
 
+    async handleRecentSmsList({ list }) {
+        for (const { phone } of list) {
+            const count = await User.countDocuments({
+                strategy: 'smsFromUser',
+                phone,
+                isPhoneVerified: false,
+            });
+
+            if (count) {
+                await this.handleIncomingSms({ phone });
+            }
+        }
+    }
+
     async _notifyUserMobileAboutPhoneVerified(user, phone) {
         setImmediate(() => {
             const lang = this._getLangBy(phone);
             const message = locale.sms.successVerification[lang]();
 
-            this._smsGate.sendTo(phone, message, lang).catch(error => {
-                stats.increment('send_success_sms_error');
+            this.callService('sms', 'plainSms', { phone, message, lang }).catch(error => {
                 Logger.error(`Send success sms error - ${error}`);
             });
         });

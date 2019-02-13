@@ -49,10 +49,12 @@ class Strategy {
                     return strategyData.strategy;
                 }
 
-                Logger.error(`Invalid strategy data - "${strategyData}", set strategy choicer to legacy.`);
+                Logger.error(
+                    `Invalid strategy data - "${strategyData}", set strategy choicer to legacy.`
+                );
 
                 this._strategyChoicer = 'legacy';
-                return this.choiceStrategy();
+                return await this.choiceStrategy();
 
             case 'legacy':
             default:
