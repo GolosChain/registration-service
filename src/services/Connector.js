@@ -1,6 +1,7 @@
-const golos = require('golos-js');
 const request = require('request-promise-native');
+const fetch = require('node-fetch');
 const core = require('gls-core-service');
+const { JsonRpc } = require('cyberwayjs');
 const BasicConnector = core.services.Connector;
 const stats = core.utils.statsClient;
 const Logger = core.utils.Logger;
@@ -13,6 +14,7 @@ const SmsFromUserStrategy = require('../controllers/SmsFromUser');
 const StrategyUtil = require('../utils/Strategy');
 const User = require('../models/User');
 
+const RPC = new JsonRpc(env.GLS_CYBERWAY_HTTP_URL, { fetch });
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
 
 class Connector extends BasicConnector {
@@ -181,7 +183,7 @@ class Connector extends BasicConnector {
         await this._throwIfUserInBlockChain(user);
 
         const model = await this._getUserModelOrThrow(user);
-        const result = this._controllers[model.strategy].verify({ model, ...data });
+        const result = await this._controllers[model.strategy].verify({ model, ...data });
 
         stats.timing('registration_verify', Date.now() - timer);
         return result;
@@ -193,7 +195,7 @@ class Connector extends BasicConnector {
         await this._throwIfUserInBlockChain(user);
 
         const model = await this._getUserModelOrThrow(user);
-        const result = this._controllers[model.strategy].toBlockChain({ model, ...keys });
+        const result = await this._controllers[model.strategy].toBlockChain({ model, ...keys });
 
         stats.timing('registration_to_blockchain', Date.now() - timer);
         return result;
@@ -280,9 +282,16 @@ class Connector extends BasicConnector {
     }
 
     async _isUserInBlockChain(user) {
-        const accounts = await golos.api.getAccountsAsync([user]);
-
-        return !!accounts.length;
+        try {
+            await RPC.get_account(user);
+            return true;
+        } catch (e) {
+            if (e.json.code === 500) {
+                return false;
+            }
+            Logger.error(code.json);
+            throw code.json;
+        }
     }
 
     async _getStrategyChoicer() {

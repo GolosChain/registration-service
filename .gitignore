@@ -4,3 +4,4 @@ db
 .env
 legacy-phones.csv
 .vscode
+.npmrc
