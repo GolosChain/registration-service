@@ -1,9 +1,14 @@
-version: '3.6'
+version: '2.1'
 services:
   registration-mongo:
     container_name: registration-mongo
     image: mongo
     restart: always
+    healthcheck:
+      test: mongo --eval 'db.getCollectionNames()'
+      interval: 10s
+      timeout: 2s
+      retries: 10
     volumes:
       - registration_mongodb_vol:/data/db
     ports:
@@ -26,6 +31,20 @@ services:
       - $GLS_SMS_GATE_HOST:$GLS_SMS_GATE_PORT:$GLS_SMS_GATE_PORT
     env_file:
       - .env
+
+  mongodb-exporter:
+    container_name: mongodb-exporter
+    image: cyberway/mongodb-exporter:v0.6.2
+    restart: always
+    depends_on:
+      registration-mongo:
+        condition: service_healthy
+    ports:
+      - 9216:9216
+    environment:
+      - MONGODB_URI=mongodb://registration-mongo:27017
+    networks:
+      - services-tier
 
 volumes:
   registration_mongodb_vol:

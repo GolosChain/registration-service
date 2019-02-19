@@ -8,18 +8,15 @@ const Logger = core.utils.Logger;
 const env = require('./data/env');
 const Connector = require('./services/Connector');
 const LegacyUser = require('./models/LegacyUser');
-const BalanceDog = require('./services/BalanceDog');
 
 class Main extends BasicMain {
     constructor() {
         super(stats, env);
 
         const connector = new Connector();
-        const balanceDog = new BalanceDog(connector);
-
         this._mongoDb = new MongoDB();
 
-        this.addNested(balanceDog, connector);
+        this.addNested(connector);
         this.defineMeta({ name: 'registration' });
     }
 

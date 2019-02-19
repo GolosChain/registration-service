@@ -1,10 +1,30 @@
-const golos = require('golos-js');
 const core = require('gls-core-service');
 const BasicController = core.controllers.Basic;
-const BlockChainValues = core.utils.BlockChainValues;
 const Logger = core.utils.Logger;
 const env = require('../data/env');
 const locale = require('../data/locale');
+const { JsonRpc, Api } = require('cyberwayjs');
+const JsSignatureProvider = require('cyberwayjs/dist/eosjs-jssig').default;
+const fetch = require('node-fetch');
+const { TextEncoder, TextDecoder } = require('text-encoding');
+
+const rpc = new JsonRpc(env.GLS_CYBERWAY_CONNECT, { fetch });
+const signatureProvider = new JsSignatureProvider([env.GLS_REGISTRAR_KEY]);
+
+const api = new Api({
+    rpc,
+    signatureProvider,
+    textDecoder: new TextDecoder(),
+    textEncoder: new TextEncoder(),
+});
+
+const transactionOptions = {
+    providebw: true,
+    broadcast: false,
+    blocksBehind: 5,
+    expireSeconds: 3600,
+    keyProvider: [env.GLS_REGISTRAR_KEY],
+};
 
 class Abstract extends BasicController {
     async getState() {
@@ -23,36 +43,37 @@ class Abstract extends BasicController {
         throw 'Not implemented';
     }
 
-    async _registerInBlockChain(user, { owner, active, posting, memo }) {
-        const jsonMetadata = '{}';
-        const extensions = [];
-        const chainProps = await golos.api.getChainPropertiesAsync();
-        const fee = chainProps.create_account_min_golos_fee;
-        const globalProps = await BlockChainValues.getDynamicGlobalProperties();
-        const golosDelegation = env.GLS_ACCOUNT_DELEGATION_FEE;
-        const vestsDelegation = BlockChainValues.golosToVests(golosDelegation, globalProps);
-
-        await golos.broadcast.accountCreateWithDelegationAsync(
-            env.GLS_REGISTRAR_KEY,
-            fee,
-            `${vestsDelegation.toFixed(6)} GESTS`,
-            env.GLS_REGISTRAR_ACCOUNT,
-            user,
-            this._makeFormedMetaKey(owner),
-            this._makeFormedMetaKey(active),
-            this._makeFormedMetaKey(posting),
-            memo,
-            jsonMetadata,
-            extensions
-        );
+    async _registerInBlockChain(name, { owner, active }) {
+        const transaction = this._generateTransaction(name, { owner, active });
+        const trx = await api.transact(transaction, transactionOptions);
+        return await api.pushSignedTransaction(trx);
     }
 
-    _makeFormedMetaKey(key) {
+    _generateTransaction(name, { owner, active }) {
         return {
-            weight_threshold: 1,
-            account_auths: [],
-            key_auths: [[key, 1]],
+            actions: [
+                {
+                    account: env.GLS_REGISTRAR_ACCOUNT,
+                    name: 'newaccount',
+                    authorization: [
+                        {
+                            actor: env.GLS_REGISTRAR_ACCOUNT,
+                            permission: 'createuser',
+                        },
+                    ],
+                    data: {
+                        creator: env.GLS_REGISTRAR_ACCOUNT,
+                        name,
+                        owner: this._generateAuthorityObject(owner),
+                        active: this._generateAuthorityObject(active),
+                    },
+                },
+            ],
         };
+    }
+
+    _generateAuthorityObject(key) {
+        return { threshold: 1, keys: [{ key, weight: 1 }], accounts: [], waits: [] };
     }
 
     async _sendFinishMail(mail, lang) {
