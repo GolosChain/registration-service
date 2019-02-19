@@ -14,7 +14,7 @@ const SmsFromUserStrategy = require('../controllers/SmsFromUser');
 const StrategyUtil = require('../utils/Strategy');
 const User = require('../models/User');
 
-const RPC = new JsonRpc(env.GLS_CYBERWAY_HTTP_URL, { fetch });
+const RPC = new JsonRpc(env.GLS_CYBERWAY_CONNECT, { fetch });
 const GOOGLE_CAPTCHA_API = 'https://www.google.com/recaptcha/api/siteverify';
 
 class Connector extends BasicConnector {
@@ -285,12 +285,18 @@ class Connector extends BasicConnector {
         try {
             await RPC.get_account(user);
             return true;
-        } catch (e) {
-            if (e.json.code === 500) {
+        } catch (error) {
+            if (!error.json) {
+                Logger.error(error);
+                throw error;
+            }
+
+            if (error.json.code === 500) {
                 return false;
             }
-            Logger.error(code.json);
-            throw code.json;
+
+            Logger.error(error.json);
+            throw error.json;
         }
     }
 

@@ -8,7 +8,7 @@ const JsSignatureProvider = require('cyberwayjs/dist/eosjs-jssig').default;
 const fetch = require('node-fetch');
 const { TextEncoder, TextDecoder } = require('text-encoding');
 
-const rpc = new JsonRpc(env.GLS_CYBERWAY_HTTP_URL, { fetch });
+const rpc = new JsonRpc(env.GLS_CYBERWAY_CONNECT, { fetch });
 const signatureProvider = new JsSignatureProvider([env.GLS_REGISTRAR_KEY]);
 
 const api = new Api({
