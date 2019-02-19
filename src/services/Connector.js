@@ -286,17 +286,21 @@ class Connector extends BasicConnector {
             await RPC.get_account(user);
             return true;
         } catch (error) {
-            if (!error.json) {
-                Logger.error(error);
-                throw error;
-            }
+            const errObject = error.json || error;
 
-            if (error.json.code === 500) {
+            if (errObject.code === 500) {
                 return false;
             }
 
-            Logger.error(error.json);
-            throw error.json;
+            Logger.error(errObject);
+
+            const code = errObject.code || 1012;
+            const message = errObject.message || 'Unhandled blockchain error';
+
+            throw {
+                code,
+                message,
+            };
         }
     }
 
