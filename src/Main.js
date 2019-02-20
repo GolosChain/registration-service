@@ -41,17 +41,24 @@ class Main extends BasicMain {
 
     async _restoreLegacyUsers() {
         const dataPath = path.resolve(__dirname, '..', 'legacy-phones.csv');
-        const rawData = fs.readFileSync(dataPath, 'utf8');
-        const hashSet = new Set(rawData.split('\n'));
+        let rawData;
+        try {
+            rawData = fs.readFileSync(dataPath, 'utf8');
+        } catch (error) {
+            Logger.log(`Cannot find file ${dataPath}, continue startup`);
+        }
+        if (rawData) {
+            const hashSet = new Set(rawData.split('\n'));
 
-        for (let phoneHash of hashSet) {
-            if (phoneHash.length !== 64) {
-                continue;
+            for (let phoneHash of hashSet) {
+                if (phoneHash.length !== 64) {
+                    continue;
+                }
+
+                const model = new LegacyUser({ phoneHash });
+
+                await model.save();
             }
-
-            const model = new LegacyUser({ phoneHash });
-
-            await model.save();
         }
     }
 }
