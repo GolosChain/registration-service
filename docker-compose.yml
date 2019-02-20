@@ -28,7 +28,6 @@ services:
       - services-tier
     ports:
       - $GLS_CONNECTOR_HOST:$GLS_CONNECTOR_PORT:$GLS_CONNECTOR_PORT
-      - $GLS_SMS_GATE_HOST:$GLS_SMS_GATE_PORT:$GLS_SMS_GATE_PORT
     env_file:
       - .env
 
