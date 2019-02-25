@@ -6,7 +6,6 @@ module.exports = MongoDB.makeModel(
     {
         user: {
             type: String,
-            // required: true,
             minLength: 2,
             maxLength: 100,
         },
