@@ -6,7 +6,7 @@ module.exports = MongoDB.makeModel(
     {
         user: {
             type: String,
-            required: true,
+            // required: true,
             minLength: 2,
             maxLength: 100,
         },
@@ -97,6 +97,7 @@ module.exports = MongoDB.makeModel(
             {
                 fields: {
                     user: 1,
+                    phone: 1,
                 },
             },
             // Strategy - smsFromUser
