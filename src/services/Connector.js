@@ -282,7 +282,11 @@ class Connector extends BasicConnector {
             return await User.findOne({ user }, {}, { sort: { _id: -1 } });
         }
 
-        return await User.findOne({ phone }, {}, { sort: { _id: -1 } });
+        if (phone) {
+            return await User.findOne({ phone }, {}, { sort: { _id: -1 } });
+        }
+
+        return null;
     }
 
     _onlyStrategies(model, strategies) {

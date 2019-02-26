@@ -96,6 +96,10 @@ module.exports = MongoDB.makeModel(
             {
                 fields: {
                     user: 1,
+                },
+            },
+            {
+                fields: {
                     phone: 1,
                 },
             },
