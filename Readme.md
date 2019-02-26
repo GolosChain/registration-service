@@ -32,22 +32,19 @@ getState:                 // Получить текущий стейт реги
 
 firstStep:                // Первый шаг регистрации.
     captcha <string>      // Ключ Google reCaptcha.
-    user <string>         // Имя пользователя.
     phone <string>        // Номер телефона.
-    mail <string>         // Адрес почты.
     testingPass <string>  // Пароль, отключающий проверку на капчу
                           // и помечающий телефон как тестовый.
 
 verify:                   // Второй шаг регистрации, верификация аккаунта (кроме стратегии smsFromUser).
-    user <string>         // Имя пользователя.
     phone <string>        // Телефон пользователя.
     code <number/string>  // СМС-код (для стратегий smsFromUser, smsToUser).
 
-addUsername:              // Второй шаг регистрации, верификация аккаунта (кроме стратегии smsFromUser).
+setUsername:              // Третий шаг регистрации, верификация аккаунта (кроме стратегии smsFromUser).
     user <string>         // Имя пользователя.
     phone <string>        // Телефон пользователя.
 
-toBlockChain:         // Третий шаг регистрации, запись в блокчейн.
+toBlockChain:         // Последний шаг регистрации, запись в блокчейн.
     user <string>     // Имя пользователя.
     owner <string>    // Ключ аккаунта (главный ключ).
     active <string>   // Ключ аккаунта (активный ключ).
