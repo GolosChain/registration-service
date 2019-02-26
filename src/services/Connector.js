@@ -41,6 +41,7 @@ class Connector extends BasicConnector {
                 getState: checkEnable(this._getState),
                 firstStep: checkEnable(this._firstStep),
                 verify: checkEnable(this._verify),
+                setUsername: checkEnable(this._setUsername),
                 toBlockChain: checkEnable(this._toBlockChain),
 
                 // strategy-specific api
@@ -99,14 +100,14 @@ class Connector extends BasicConnector {
         };
     }
 
-    async _getState({ user }) {
+    async _getState({ user, phone }) {
         const timer = Date.now();
 
         if (await this._isUserInBlockChain(user)) {
             return { currentState: 'registered' };
         }
 
-        const recentModel = await this._getUserModel(user);
+        const recentModel = await this._getUserModel({ user, phone });
 
         if (!recentModel) {
             return { currentState: 'firstStep' };
@@ -126,7 +127,9 @@ class Connector extends BasicConnector {
         const timer = Date.now();
         const isTestingSystem = this._isTestingSystem(testingPass);
 
-        await this._throwIfUserInBlockChain(user);
+        if (user) {
+            await this._throwIfUserInBlockChain(user);
+        }
 
         if (env.GLS_CAPTCHA_ON && !isTestingSystem) {
             await this._checkCaptcha(captcha);
@@ -134,7 +137,7 @@ class Connector extends BasicConnector {
 
         const strategy = await this._choiceStrategy();
         const handler = this._controllers[strategy];
-        const recentModel = await this._getUserModel(user);
+        const recentModel = await this._getUserModel({ user, phone });
         const result = await handler.firstStep({ user, phone, mail, isTestingSystem }, recentModel);
 
         stats.timing('registration_first_step', Date.now() - timer);
@@ -170,24 +173,40 @@ class Connector extends BasicConnector {
         return await this._strategyUtil.choiceStrategy();
     }
 
-    async _verify({ user, ...data }) {
+    async _verify({ user, phone, ...data }) {
         const timer = Date.now();
 
-        await this._throwIfUserInBlockChain(user);
+        if (user) {
+            await this._throwIfUserInBlockChain(user);
+        }
 
-        const model = await this._getUserModelOrThrow(user);
-        const result = await this._controllers[model.strategy].verify({ model, ...data });
+        const model = await this._getUserModelOrThrow({ user, phone });
+        const result = await this._controllers[model.strategy].verify({ model, phone, ...data });
 
         stats.timing('registration_verify', Date.now() - timer);
         return result;
     }
 
+    async _setUsername({ phone, user }) {
+        const userModel = await this._getUserModelOrThrow({ phone });
+
+        userModel.user = user;
+
+        await userModel.save();
+    }
+
     async _toBlockChain({ user, ...keys }) {
+        if (!user) {
+            throw {
+                code: 400,
+                message: 'User is a required parameter',
+            };
+        }
         const timer = Date.now();
 
         await this._throwIfUserInBlockChain(user);
 
-        const model = await this._getUserModelOrThrow(user);
+        const model = await this._getUserModelOrThrow({ user });
         const result = await this._controllers[model.strategy].toBlockChain({ model, ...keys });
 
         stats.timing('registration_to_blockchain', Date.now() - timer);
@@ -199,7 +218,7 @@ class Connector extends BasicConnector {
 
         await this._throwIfUserInBlockChain(user);
 
-        const model = await this._getUserModelOrThrow(user);
+        const model = await this._getUserModelOrThrow({ user });
 
         this._onlyStrategies(model, ['smsFromUser', 'smsToUser']);
 
@@ -222,7 +241,7 @@ class Connector extends BasicConnector {
 
         await this._throwIfUserInBlockChain(user);
 
-        const model = await this._getUserModelOrThrow(user);
+        const model = await this._getUserModelOrThrow({ user });
 
         this._onlyStrategies(model, ['smsToUser']);
 
@@ -237,7 +256,7 @@ class Connector extends BasicConnector {
 
         await this._throwIfUserInBlockChain(user);
 
-        const model = await this._getUserModelOrThrow(user);
+        const model = await this._getUserModelOrThrow({ user });
 
         this._onlyStrategies(model, ['smsFromUser']);
 
@@ -248,8 +267,8 @@ class Connector extends BasicConnector {
         return result;
     }
 
-    async _getUserModelOrThrow(user) {
-        const model = await this._getUserModel(user);
+    async _getUserModelOrThrow({ user, phone }) {
+        const model = await this._getUserModel({ user, phone });
 
         if (!model) {
             throw errors.E404.error;
@@ -258,8 +277,16 @@ class Connector extends BasicConnector {
         return model;
     }
 
-    async _getUserModel(user) {
-        return await User.findOne({ user }, {}, { sort: { _id: -1 } });
+    async _getUserModel({ user, phone }) {
+        if (user) {
+            return await User.findOne({ user }, {}, { sort: { _id: -1 } });
+        }
+
+        if (phone) {
+            return await User.findOne({ phone }, {}, { sort: { _id: -1 } });
+        }
+
+        return null;
     }
 
     _onlyStrategies(model, strategies) {
