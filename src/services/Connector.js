@@ -120,14 +120,7 @@ class Connector extends BasicConnector {
     }
 
     async _firstStep({ captcha, user, phone, mail, testingPass = null }) {
-        if (
-            /* !user ||
-            typeof user !== 'string' || */
-            !phone ||
-            typeof phone !== 'string' ||
-            !mail ||
-            typeof mail !== 'string'
-        ) {
+        if (!phone || typeof phone !== 'string' || !mail || typeof mail !== 'string') {
             throw { code: 400, message: 'Invalid params' };
         }
 
@@ -285,7 +278,9 @@ class Connector extends BasicConnector {
     }
 
     async _getUserModel({ user, phone }) {
-        if (user) return await User.findOne({ user }, {}, { sort: { _id: -1 } });
+        if (user) {
+            return await User.findOne({ user }, {}, { sort: { _id: -1 } });
+        }
 
         return await User.findOne({ phone }, {}, { sort: { _id: -1 } });
     }
