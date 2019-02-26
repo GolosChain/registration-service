@@ -42,6 +42,7 @@ services:
       - 9216:9216
     environment:
       - MONGODB_URI=mongodb://registration-mongo:27017
+      - HTTP_AUTH=${MONGODB_EXPORTER_USER:?Can't start without auth variable MONGODB_EXPORTER_USER}:${MONGODB_EXPORTER_PASS:?Can't start without auth variable MONGODB_EXPORTER_PASS}
     networks:
       - services-tier
 
