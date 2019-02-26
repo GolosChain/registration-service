@@ -119,14 +119,7 @@ class Connector extends BasicConnector {
     }
 
     async _firstStep({ captcha, user, phone, mail, testingPass = null }) {
-        if (
-            !user ||
-            typeof user !== 'string' ||
-            !phone ||
-            typeof phone !== 'string' ||
-            !mail ||
-            typeof mail !== 'string'
-        ) {
+        if (!phone || typeof phone !== 'string') {
             throw { code: 400, message: 'Invalid params' };
         }
 
