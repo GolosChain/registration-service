@@ -239,9 +239,11 @@ class Connector extends BasicConnector {
     async _resendSmsCode({ user, phone }) {
         const timer = Date.now();
 
-        await this._throwIfUserInBlockChain(user);
+        if (user) {
+            await this._throwIfUserInBlockChain(user);
+        }
 
-        const model = await this._getUserModelOrThrow({ user });
+        const model = await this._getUserModelOrThrow({ user, phone });
 
         this._onlyStrategies(model, ['smsToUser']);
 
