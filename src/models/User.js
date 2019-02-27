@@ -75,7 +75,6 @@ module.exports = MongoDB.makeModel(
         // Mail section
         mail: {
             type: String,
-            required: true,
             minLength: 6,
             maxLength: 200,
         },

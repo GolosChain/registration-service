@@ -9,6 +9,13 @@ const User = require('../models/User');
 
 class SmsToUser extends AbstractSms {
     async getState(recentModel) {
+        if (!recentModel.user && recentModel.isPhoneVerified === true) {
+            return {
+                currentState: 'setUsername',
+                strategy: 'smsToUser',
+            };
+        }
+
         const state = await super.getState(recentModel);
 
         if (state.currentState === 'verify') {
