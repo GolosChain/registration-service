@@ -190,6 +190,15 @@ class Connector extends BasicConnector {
     async _setUsername({ phone, user }) {
         const userModel = await this._getUserModelOrThrow({ phone });
 
+        const alreadyExists = (await this._getUserModel({ user })) ? true : false;
+
+        if (alreadyExists) {
+            throw {
+                code: 409,
+                message: 'User already exists',
+            };
+        }
+
         userModel.user = user;
 
         await userModel.save();
