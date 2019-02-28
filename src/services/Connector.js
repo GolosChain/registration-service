@@ -125,6 +125,15 @@ class Connector extends BasicConnector {
         }
 
         const timer = Date.now();
+        const isAlreadyInDB = !!(await this._getUserModel({ user, phone }));
+
+        if (isAlreadyInDB) {
+            throw {
+                code: 409,
+                message: 'Is phone number or user name already exists',
+            };
+        }
+
         const isTestingSystem = this._isTestingSystem(testingPass);
 
         if (user) {
