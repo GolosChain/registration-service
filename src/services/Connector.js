@@ -70,12 +70,22 @@ class Connector extends BasicConnector {
         });
     }
 
-    async _deleteAccount({ targetUser, testingPass = null }) {
-        if (!targetUser || !this._isTestingSystem(testingPass)) {
+    async _deleteAccount({ targetUser, targetPhone, testingPass = null }) {
+        if (!this._isTestingSystem(testingPass)) {
             throw { code: 403, message: 'Access denied' };
         }
 
-        await User.deleteOne({ user: targetUser, isTestingSystem: true });
+        if (!targetUser && !targetPhone) {
+            throw { code: 403, message: 'Access denied' };
+        }
+
+        if (targetUser) {
+            await User.deleteOne({ user: targetUser, isTestingSystem: true });
+        }
+
+        if (targetPhone) {
+            await User.deleteOne({ phone: targetPhone, isTestingSystem: true });
+        }
     }
 
     enableRegistration() {
