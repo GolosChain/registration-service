@@ -12,6 +12,7 @@ const MailStrategy = require('../controllers/Mail');
 const SmsToUserStrategy = require('../controllers/SmsToUser');
 const SmsFromUserStrategy = require('../controllers/SmsFromUser');
 const StrategyUtil = require('../utils/Strategy');
+const PhoneUtil = require('../utils/Phone');
 const User = require('../models/User');
 
 const RPC = new JsonRpc(env.GLS_CYBERWAY_CONNECT, { fetch });
@@ -85,6 +86,8 @@ class Connector extends BasicConnector {
 
         if (targetPhone) {
             await User.deleteOne({ phone: targetPhone, isTestingSystem: true });
+            const phoneHash = PhoneUtil.saltedHash(targetPhone);
+            await User.deleteOne({ phoneHash });
         }
     }
 
