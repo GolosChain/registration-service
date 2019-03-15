@@ -416,7 +416,7 @@ class Connector extends BasicConnector {
         return false;
     }
 
-    async _normalizePhone(phone) {
+    _normalizePhone(phone) {
         if (phone[0] !== '+') {
             phone = '+' + phone;
         }
