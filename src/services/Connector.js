@@ -126,7 +126,7 @@ class Connector extends BasicConnector {
             return { currentState: 'firstStep' };
         }
 
-        const result = this._controllers[recentModel.strategy].getState(recentModel);
+        const result = await this._controllers[recentModel.strategy].getState(recentModel);
 
         stats.timing('registration_get_state', Date.now() - timer);
         return result;
@@ -138,12 +138,16 @@ class Connector extends BasicConnector {
         }
 
         const timer = Date.now();
-        if (phone[0] !== '+') {
-            phone = '+' + phone;
-        }
-        const isAlreadyInDB = Boolean(await this._getUserModel({ user, phone }));
 
-        if (isAlreadyInDB) {
+        phone = this._normalizePhone(phone);
+
+        const strategy = await this._choiceStrategy();
+        const handler = this._controllers[strategy];
+        const recentModel = await this._getUserModel({ user, phone });
+
+        const isAlreadyInDB = Boolean(recentModel);
+
+        if (isAlreadyInDB && (await handler._isActual(recentModel))) {
             throw {
                 code: 409,
                 message: 'This phone number or user name already exists',
@@ -160,9 +164,6 @@ class Connector extends BasicConnector {
             await this._checkCaptcha(captcha);
         }
 
-        const strategy = await this._choiceStrategy();
-        const handler = this._controllers[strategy];
-        const recentModel = await this._getUserModel({ user, phone });
         const result = await handler.firstStep({ user, phone, mail, isTestingSystem }, recentModel);
 
         stats.timing('registration_first_step', Date.now() - timer);
@@ -319,11 +320,12 @@ class Connector extends BasicConnector {
         }
 
         if (phone) {
+            phone = this._normalizePhone(phone);
             let userModel = await User.findOne({ phone }, {}, { sort: { _id: -1 } });
 
             if (!userModel) {
                 const phoneHash = PhoneUtil.saltedHash(phone);
-                return await User.findOne({ phoneHash }, {}, { sort: { _id: -1 } });
+                userModel = await User.findOne({ phoneHash }, {}, { sort: { _id: -1 } });
             }
             return userModel;
         }
@@ -412,6 +414,13 @@ class Connector extends BasicConnector {
         }
 
         return false;
+    }
+
+    async _normalizePhone(phone) {
+        if (phone[0] !== '+') {
+            phone = '+' + phone;
+        }
+        return phone;
     }
 }
 
