@@ -27,10 +27,6 @@ const transactionOptions = {
 };
 
 class Abstract extends BasicController {
-    async getState() {
-        throw 'Not implemented';
-    }
-
     async firstStep() {
         throw 'Not implemented';
     }
@@ -41,6 +37,10 @@ class Abstract extends BasicController {
 
     async toBlockChain() {
         throw 'Not implemented';
+    }
+
+    _isActual() {
+        return true;
     }
 
     async _registerInBlockChain(name, { owner, active }) {

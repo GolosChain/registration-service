@@ -9,22 +9,6 @@ const User = require('../models/User');
 const LegacyUser = require('../models/LegacyUser');
 
 class AbstractSms extends Abstract {
-    async getState(recentModel) {
-        if (!this._isActual(recentModel)) {
-            return { currentState: 'firstStep' };
-        }
-
-        if (recentModel.registered) {
-            return { currentState: 'registered' };
-        }
-
-        if (recentModel.isPhoneVerified) {
-            return { currentState: 'toBlockChain' };
-        }
-
-        return { currentState: 'verify', strategy: recentModel.strategy };
-    }
-
     async changePhone({ model, phone }) {
         await this._throwIfPhoneDuplicate(model.user, phone, model.strategy);
 
@@ -66,6 +50,7 @@ class AbstractSms extends Abstract {
         model.registered = true;
         model.phone = PhoneUtils.maskBody(phone);
         model.phoneHash = PhoneUtils.saltedHash(phone);
+        model.state = 'registered';
         await model.save();
 
         await this._sendFinishMail(model.mail, this._getLangBy(model.phone));

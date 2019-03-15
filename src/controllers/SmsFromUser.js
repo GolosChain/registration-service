@@ -26,6 +26,7 @@ class SmsFromUser extends AbstractSms {
             user,
             phone,
             mail,
+            state: 'verify',
             strategy: 'smsFromUser',
             isTestingSystem,
         });
@@ -37,10 +38,6 @@ class SmsFromUser extends AbstractSms {
         }
 
         return { strategy: 'smsFromUser' };
-    }
-
-    async verify() {
-        throw errors.E406.error;
     }
 
     async handleIncomingSms({ phone }) {
@@ -60,6 +57,7 @@ class SmsFromUser extends AbstractSms {
         }
 
         model.isPhoneVerified = true;
+        model.state = 'toBlockChain';
         await model.save();
 
         await this._notifyUserMobileAboutPhoneVerified(model.user, phone);

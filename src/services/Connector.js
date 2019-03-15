@@ -122,14 +122,15 @@ class Connector extends BasicConnector {
 
         const recentModel = await this._getUserModel({ user, phone });
 
-        if (!recentModel) {
+        if (
+            !recentModel ||
+            !(await this._controllers[recentModel.strategy]._isActual(recentModel))
+        ) {
             return { currentState: 'firstStep' };
         }
 
-        const result = await this._controllers[recentModel.strategy].getState(recentModel);
-
         stats.timing('registration_get_state', Date.now() - timer);
-        return result;
+        return { currentState: recentModel.state };
     }
 
     async _firstStep({ captcha, user, phone, mail, testingPass = null }) {
@@ -141,24 +142,20 @@ class Connector extends BasicConnector {
 
         phone = this._normalizePhone(phone);
 
+        const { currentState } = await this._getState({ user, phone });
+        if (currentState !== 'firstStep') {
+            throw {
+                code: 400,
+                message: 'Invalid step taken',
+                currentState,
+            };
+        }
+
         const strategy = await this._choiceStrategy();
         const handler = this._controllers[strategy];
         const recentModel = await this._getUserModel({ user, phone });
 
-        const isAlreadyInDB = Boolean(recentModel);
-
-        if (isAlreadyInDB && (await handler._isActual(recentModel))) {
-            throw {
-                code: 409,
-                message: 'This phone number or user name already exists',
-            };
-        }
-
         const isTestingSystem = this._isTestingSystem(testingPass);
-
-        if (user) {
-            await this._throwIfUserInBlockChain(user);
-        }
 
         if (env.GLS_CAPTCHA_ON && !isTestingSystem) {
             await this._checkCaptcha(captcha);
@@ -202,8 +199,13 @@ class Connector extends BasicConnector {
     async _verify({ user, phone, ...data }) {
         const timer = Date.now();
 
-        if (user) {
-            await this._throwIfUserInBlockChain(user);
+        const { currentState } = await this._getState({ user, phone });
+        if (currentState !== 'verify') {
+            throw {
+                code: 400,
+                message: 'Invalid step taken',
+                currentState,
+            };
         }
 
         const model = await this._getUserModelOrThrow({ user, phone });
@@ -214,18 +216,28 @@ class Connector extends BasicConnector {
     }
 
     async _setUsername({ phone, user }) {
-        const userModel = await this._getUserModelOrThrow({ phone });
-
-        const alreadyExists = (await this._getUserModel({ user })) ? true : false;
-
-        if (alreadyExists) {
+        const { currentState } = await this._getState({ phone });
+        if (currentState !== 'setUsername') {
             throw {
-                code: 409,
-                message: 'User already exists',
+                code: 400,
+                message: 'Invalid step taken',
+                currentState,
             };
         }
 
+        const userState = await this._getState({ user });
+        // name already taken
+        if (userState.currentState !== 'firstStep') {
+            throw {
+                code: 400,
+                message: 'Name is already in use',
+            };
+        }
+
+        const userModel = await this._getUserModelOrThrow({ phone });
+
         userModel.user = user;
+        userModel.state = 'toBlockChain';
 
         await userModel.save();
     }
@@ -239,7 +251,14 @@ class Connector extends BasicConnector {
         }
         const timer = Date.now();
 
-        await this._throwIfUserInBlockChain(user);
+        const { currentState } = await this._getState({ user });
+        if (currentState !== 'toBlockChain') {
+            throw {
+                code: 400,
+                message: 'Invalid step taken',
+                currentState,
+            };
+        }
 
         const model = await this._getUserModelOrThrow({ user });
         const result = await this._controllers[model.strategy].toBlockChain({ model, ...keys });
