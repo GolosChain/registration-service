@@ -138,12 +138,15 @@ class Connector extends BasicConnector {
         }
 
         const timer = Date.now();
-        const isAlreadyInDB = !!(await this._getUserModel({ user, phone }));
+        if (phone[0] !== '+') {
+            phone = '+' + phone;
+        }
+        const isAlreadyInDB = Boolean(await this._getUserModel({ user, phone }));
 
         if (isAlreadyInDB) {
             throw {
                 code: 409,
-                message: 'Is phone number or user name already exists',
+                message: 'This phone number or user name already exists',
             };
         }
 
@@ -316,7 +319,13 @@ class Connector extends BasicConnector {
         }
 
         if (phone) {
-            return await User.findOne({ phone }, {}, { sort: { _id: -1 } });
+            let userModel = await User.findOne({ phone }, {}, { sort: { _id: -1 } });
+
+            if (!userModel) {
+                const phoneHash = PhoneUtil.saltedHash(phone);
+                return await User.findOne({ phoneHash }, {}, { sort: { _id: -1 } });
+            }
+            return userModel;
         }
 
         return null;
