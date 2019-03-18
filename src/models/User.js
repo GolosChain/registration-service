@@ -14,6 +14,10 @@ module.exports = MongoDB.makeModel(
             enum: ['smsToUser', 'smsFromUser', 'email', 'social'],
             required: true,
         },
+        state: {
+            type: String,
+            default: 'firstStep',
+        },
         registered: {
             type: Boolean,
             default: false,

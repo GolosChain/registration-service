@@ -6,27 +6,16 @@ const locale = require('../data/locale');
 const env = require('../data/env');
 const AbstractSms = require('./AbstractSms');
 const User = require('../models/User');
+const States = require('../data/states');
 
 class SmsToUser extends AbstractSms {
-    async getState(recentModel) {
-        if (!recentModel.user && recentModel.isPhoneVerified === true) {
-            return {
-                currentState: 'setUsername',
-                strategy: 'smsToUser',
-            };
-        }
-
-        const state = await super.getState(recentModel);
-
-        if (state.currentState === 'verify') {
-            if (recentModel.smsCodeResendCount <= env.GLS_SMS_RESEND_CODE_MAX) {
-                state.nextSmsRetry = this._calcNextSmsRetry(recentModel);
-            } else {
-                state.nextSmsRetry = null;
+    _getSmsRetryState(recentModel) {
+        if (recentModel.state === 'verify') {
+            if (recentModel.smsCodeResendCount > env.GLS_SMS_RESEND_CODE_MAX) {
+                return null;
             }
+            return this._calcNextSmsRetry(recentModel);
         }
-
-        return state;
     }
 
     async firstStep({ user, phone, mail, isTestingSystem }, recentModel) {
@@ -43,6 +32,7 @@ class SmsToUser extends AbstractSms {
             phone,
             mail,
             strategy: 'smsToUser',
+            state: States.VERIFY,
             isTestingSystem,
         });
 
@@ -112,10 +102,14 @@ class SmsToUser extends AbstractSms {
         }
 
         if (model.smsCode !== code) {
-            throw errors.E403.error;
+            throw {
+                ...errors.E403.error,
+                nextSmsRetry: this._getSmsRetryState(model),
+            };
         }
 
         model.isPhoneVerified = true;
+        model.state = States.SET_USERNAME;
         await model.save();
     }
 
@@ -144,11 +138,11 @@ class SmsToUser extends AbstractSms {
         }
 
         if (Date.now() - model.smsCodeDate < env.GLS_SMS_RESEND_CODE_TIMEOUT) {
-            throw { code: 429, message: 'Try late.' };
+            throw { code: 429, message: 'Try later.' };
         }
 
         if (model.smsCodeResendCount > env.GLS_SMS_RESEND_CODE_MAX) {
-            throw { code: 429, message: 'Too many retry.' };
+            throw { code: 429, message: 'Too many retries.' };
         }
 
         model.smsCodeResendCount += 1;
@@ -159,7 +153,7 @@ class SmsToUser extends AbstractSms {
             await this._sendSmsCode(model, model.phone);
         }
 
-        return { nextSmsRetry: this._calcNextSmsRetry(model) };
+        return { nextSmsRetry: this._getSmsRetryState(model) };
     }
 
     _calcNextSmsRetry(model = null) {

@@ -7,24 +7,9 @@ const Abstract = require('./Abstract');
 const env = require('../data/env');
 const User = require('../models/User');
 const LegacyUser = require('../models/LegacyUser');
+const States = require('../data/states');
 
 class AbstractSms extends Abstract {
-    async getState(recentModel) {
-        if (!this._isActual(recentModel)) {
-            return { currentState: 'firstStep' };
-        }
-
-        if (recentModel.registered) {
-            return { currentState: 'registered' };
-        }
-
-        if (recentModel.isPhoneVerified) {
-            return { currentState: 'toBlockChain' };
-        }
-
-        return { currentState: 'verify', strategy: recentModel.strategy };
-    }
-
     async changePhone({ model, phone }) {
         await this._throwIfPhoneDuplicate(model.user, phone, model.strategy);
 
@@ -66,6 +51,7 @@ class AbstractSms extends Abstract {
         model.registered = true;
         model.phone = PhoneUtils.maskBody(phone);
         model.phoneHash = PhoneUtils.saltedHash(phone);
+        model.state = States.REGISTERED;
         await model.save();
 
         await this._sendFinishMail(model.mail, this._getLangBy(model.phone));
@@ -82,9 +68,9 @@ class AbstractSms extends Abstract {
             }
 
             if (recentModel.isPhoneVerified) {
-                return { currentState: 'toBlockChain', strategy: recentModel.strategy };
+                return { currentState: States.TO_BLOCK_CHAIN, strategy: recentModel.strategy };
             } else {
-                return { currentState: 'verify', strategy: recentModel.strategy };
+                return { currentState: States.VERIFY, strategy: recentModel.strategy };
             }
         }
     }
