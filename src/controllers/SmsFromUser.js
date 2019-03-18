@@ -5,6 +5,7 @@ const Logger = core.utils.Logger;
 const locale = require('../data/locale');
 const AbstractSms = require('./AbstractSms');
 const User = require('../models/User');
+const States = require('../data/states');
 
 class SmsFromUser extends AbstractSms {
     constructor(...args) {
@@ -26,7 +27,7 @@ class SmsFromUser extends AbstractSms {
             user,
             phone,
             mail,
-            state: 'verify',
+            state: States.VERIFY,
             strategy: 'smsFromUser',
             isTestingSystem,
         });
@@ -57,7 +58,7 @@ class SmsFromUser extends AbstractSms {
         }
 
         model.isPhoneVerified = true;
-        model.state = 'toBlockChain';
+        model.state = States.TO_BLOCK_CHAIN;
         await model.save();
 
         await this._notifyUserMobileAboutPhoneVerified(model.user, phone);

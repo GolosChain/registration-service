@@ -7,6 +7,7 @@ const Abstract = require('./Abstract');
 const env = require('../data/env');
 const User = require('../models/User');
 const LegacyUser = require('../models/LegacyUser');
+const States = require('../data/states');
 
 class AbstractSms extends Abstract {
     async changePhone({ model, phone }) {
@@ -50,7 +51,7 @@ class AbstractSms extends Abstract {
         model.registered = true;
         model.phone = PhoneUtils.maskBody(phone);
         model.phoneHash = PhoneUtils.saltedHash(phone);
-        model.state = 'registered';
+        model.state = States.REGISTERED;
         await model.save();
 
         await this._sendFinishMail(model.mail, this._getLangBy(model.phone));
@@ -67,9 +68,9 @@ class AbstractSms extends Abstract {
             }
 
             if (recentModel.isPhoneVerified) {
-                return { currentState: 'toBlockChain', strategy: recentModel.strategy };
+                return { currentState: States.TO_BLOCK_CHAIN, strategy: recentModel.strategy };
             } else {
-                return { currentState: 'verify', strategy: recentModel.strategy };
+                return { currentState: States.VERIFY, strategy: recentModel.strategy };
             }
         }
     }

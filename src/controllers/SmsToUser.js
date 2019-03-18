@@ -6,15 +6,15 @@ const locale = require('../data/locale');
 const env = require('../data/env');
 const AbstractSms = require('./AbstractSms');
 const User = require('../models/User');
+const States = require('../data/states');
 
 class SmsToUser extends AbstractSms {
     _getSmsRetryState(recentModel) {
         if (recentModel.state === 'verify') {
-            if (recentModel.smsCodeResendCount <= env.GLS_SMS_RESEND_CODE_MAX) {
-                return this._calcNextSmsRetry(recentModel);
-            } else {
+            if (recentModel.smsCodeResendCount > env.GLS_SMS_RESEND_CODE_MAX) {
                 return null;
             }
+            return this._calcNextSmsRetry(recentModel);
         }
     }
 
@@ -32,7 +32,7 @@ class SmsToUser extends AbstractSms {
             phone,
             mail,
             strategy: 'smsToUser',
-            state: 'verify',
+            state: States.VERIFY,
             isTestingSystem,
         });
 
@@ -102,11 +102,14 @@ class SmsToUser extends AbstractSms {
         }
 
         if (model.smsCode !== code) {
-            throw { ...errors.E403.error, nextSmsRetry: this._getSmsRetryState(model) };
+            throw {
+                ...errors.E403.error,
+                nextSmsRetry: this._getSmsRetryState(model),
+            };
         }
 
         model.isPhoneVerified = true;
-        model.state = 'setUsername';
+        model.state = States.SET_USERNAME;
         await model.save();
     }
 
