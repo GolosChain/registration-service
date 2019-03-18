@@ -149,11 +149,14 @@ class SmsToUser extends AbstractSms {
 
         await model.save();
 
+        let code;
         if (!model.isTestingSystem) {
             await this._sendSmsCode(model, model.phone);
+        } else {
+            code = await this._makeAndApplyTestingSmsCode(model);
         }
 
-        return { nextSmsRetry: this._getSmsRetryState(model) };
+        return { nextSmsRetry: this._getSmsRetryState(model), code };
     }
 
     _calcNextSmsRetry(model = null) {
