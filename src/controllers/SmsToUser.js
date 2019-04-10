@@ -161,9 +161,9 @@ class SmsToUser extends AbstractSms {
 
     _calcNextSmsRetry(model = null) {
         if (model) {
-            return new Date(model.smsCodeDate + env.GLS_SMS_RESEND_CODE_TIMEOUT).toISOString();
+            return new Date(Number(model.smsCodeDate) + env.GLS_SMS_RESEND_CODE_TIMEOUT);
         } else {
-            return new Date(Date.now() + env.GLS_SMS_RESEND_CODE_TIMEOUT).toISOString();
+            return new Date(Date.now() + env.GLS_SMS_RESEND_CODE_TIMEOUT);
         }
     }
 }
