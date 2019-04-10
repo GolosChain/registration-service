@@ -85,9 +85,21 @@ class Connector extends BasicConnector {
         }
 
         if (targetPhone) {
-            await User.deleteOne({ phone: targetPhone, isTestingSystem: true });
+            const findPhone = { phone: targetPhone };
+
+            if (targetPhone !== '+70000000001') {
+                findPhone.isTestingSystem = true;
+            }
+
+            await User.deleteOne(findPhone);
+
             const phoneHash = PhoneUtil.saltedHash(targetPhone);
-            await User.deleteOne({ phoneHash });
+            const findHash = { phoneHash };
+
+            if (targetPhone !== '+70000000001') {
+                findHash.isTestingSystem = true;
+            }
+            await User.deleteOne(findHash);
         }
     }
 
