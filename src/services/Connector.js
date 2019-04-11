@@ -142,7 +142,7 @@ class Connector extends BasicConnector {
         }
 
         stats.timing('registration_get_state', Date.now() - timer);
-        return { currentState: recentModel.state };
+        return { currentState: recentModel.state, user: recentModel.user };
     }
 
     async _firstStep({ captcha, user, phone, mail, testingPass = null }) {
@@ -440,11 +440,7 @@ class Connector extends BasicConnector {
     async isRegistered(username) {
         const user = await User.findOne({ user: username });
 
-        if (user && user.registered) {
-            return true;
-        }
-
-        return false;
+        return Boolean(user && user.registered);
     }
 
     _normalizePhone(phone) {
