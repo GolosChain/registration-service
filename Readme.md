@@ -59,8 +59,9 @@ changePhone:              // Смена номера телефона (для с
     captcha <string>      // Ключ Google reCaptcha (для стратегии smsToUser).
     testingPass <string>  // Пароль, отключающий проверку на капчу
 
-resendSmsCode:      // Переотравка кода подтверждения (для стратегии smsToUser).
+resendSmsCode:      // Переотравка кода подтверждения (для стратегии smsToUser). Идентификация пользователя осуществляется *либо* по полю `user`, *либо* по полю `phone` (отправлять нужно только одно).
     user <string>   // Имя пользователя.
+    phone <string>  // Телефон пользователя.
 
 subscribeOnSmsGet:  // Подписка на факт получения СМС от юзера (для стратегии smsFromUser).
     user <string>   // Имя пользователя.
