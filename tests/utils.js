@@ -96,14 +96,14 @@ async function generateNewUsername() {
 
     try {
         const occupied = await isUsernameOccupied(accountName);
-        if (!occupied) {
-            return accountName;
-        } else {
+        if (occupied) {
             return await generateNewUsername();
         }
-    } catch (e) {
-        console.error(e);
-        throw e;
+
+        return accountName;
+    } catch (error) {
+        console.error(error);
+        throw error;
     }
 }
 

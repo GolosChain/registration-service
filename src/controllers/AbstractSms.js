@@ -153,17 +153,13 @@ class AbstractSms extends Abstract {
                 capitalization: 'lowercase',
             });
 
-        try {
-            const occupied = await this._isUsernameOccupied(accountName);
-            if (!occupied) {
-                return accountName;
-            } else {
-                return await this._generateNewUsername();
-            }
-        } catch (e) {
-            console.error(e);
-            throw e;
+        const occupied = await this._isUsernameOccupied(accountName);
+
+        if (occupied) {
+            return await this._generateNewUsername();
         }
+
+        return accountName;
     }
 
     async _isUsernameOccupied(user) {
