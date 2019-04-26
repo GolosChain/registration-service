@@ -9,7 +9,7 @@ const fetch = require('node-fetch');
 const { TextEncoder, TextDecoder } = require('text-encoding');
 
 const rpc = new JsonRpc(env.GLS_CYBERWAY_CONNECT, { fetch });
-const signatureProvider = new JsSignatureProvider([env.GLS_REGISTRAR_KEY]);
+const signatureProvider = new JsSignatureProvider([env.GLS_REGISTRAR_KEY, env.GLS_CREATOR_KEY]);
 
 const api = new Api({
     rpc,
@@ -43,13 +43,13 @@ class Abstract extends BasicController {
         return true;
     }
 
-    async _registerInBlockChain(name, { owner, active }) {
-        const transaction = this._generateTransaction(name, { owner, active });
+    async _registerInBlockChain(name, alias, { owner, active }) {
+        const transaction = this._generateRegisterTransaction(name, alias, { owner, active });
         const trx = await api.transact(transaction, transactionOptions);
         return await api.pushSignedTransaction(trx);
     }
 
-    _generateTransaction(name, { owner, active }) {
+    _generateRegisterTransaction(name, alias, { owner, active }) {
         return {
             actions: [
                 {
@@ -66,6 +66,21 @@ class Abstract extends BasicController {
                         name,
                         owner: this._generateAuthorityObject(owner),
                         active: this._generateAuthorityObject(active),
+                    },
+                },
+                {
+                    account: 'cyber.domain',
+                    name: 'newusername',
+                    authorization: [
+                        {
+                            actor: env.GLS_CREATOR_NAME,
+                            permission: 'active',
+                        },
+                    ],
+                    data: {
+                        creator: env.GLS_CREATOR_NAME,
+                        name: alias,
+                        owner: name,
                     },
                 },
             ],

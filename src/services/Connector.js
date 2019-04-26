@@ -34,34 +34,202 @@ class Connector extends BasicConnector {
     }
 
     async start() {
-        const checkEnable = this._checkEnable.bind(this);
-
         await super.start({
             serverRoutes: {
                 // step api
-                getState: checkEnable(this._getState),
-                firstStep: checkEnable(this._firstStep),
-                verify: checkEnable(this._verify),
-                setUsername: checkEnable(this._setUsername),
-                toBlockChain: checkEnable(this._toBlockChain),
+                getState: {
+                    handler: this._getState,
+                    scope: this,
+                    before: [
+                        {
+                            handler: this._checkEnable,
+                            scope: this,
+                        },
+                    ],
+                    validation: {
+                        properties: {
+                            user: {
+                                type: 'string',
+                            },
+                            phone: {
+                                type: 'string',
+                            },
+                        },
+                        oneOf: [{ required: ['phone'] }, { required: ['user'] }],
+                    },
+                },
+                firstStep: {
+                    handler: this._firstStep,
+                    scope: this,
+                    before: [
+                        {
+                            handler: this._checkEnable,
+                            scope: this,
+                        },
+                    ],
+                    validation: {
+                        required: ['phone'],
+                        properties: {
+                            phone: {
+                                type: 'string',
+                            },
+                            testingPass: {
+                                type: 'string',
+                            },
+                        },
+                    },
+                },
+                verify: {
+                    handler: this._verify,
+                    scope: this,
+                    before: [
+                        {
+                            handler: this._checkEnable,
+                            scope: this,
+                        },
+                    ],
+                    validation: {
+                        required: ['code', 'phone'],
+                        properties: {
+                            code: {
+                                type: 'number',
+                            },
+                            phone: {
+                                type: 'string',
+                            },
+                        },
+                    },
+                },
+                setUsername: {
+                    handler: this._setUsername,
+                    scope: this,
+                    before: [
+                        {
+                            handler: this._checkEnable,
+                            scope: this,
+                        },
+                    ],
+                    validation: {
+                        required: ['user', 'phone'],
+                        properties: {
+                            user: {
+                                type: 'string',
+                            },
+                            phone: {
+                                type: 'string',
+                            },
+                        },
+                    },
+                },
+                toBlockChain: {
+                    handler: this._toBlockChain,
+                    scope: this,
+                    before: [
+                        {
+                            handler: this._checkEnable,
+                            scope: this,
+                        },
+                    ],
+                    validation: {
+                        required: ['user', 'active', 'owner'],
+                        properties: {
+                            user: {
+                                type: 'string',
+                            },
+                            active: {
+                                type: 'string',
+                            },
+                            owner: {
+                                type: 'string',
+                            },
+                        },
+                        additionalProperties: true,
+                    },
+                },
 
                 // strategy-specific api
-                changePhone: checkEnable(this._changePhone),
-                resendSmsCode: checkEnable(this._resendSmsCode),
-                subscribeOnSmsGet: checkEnable(this._subscribeOnSmsGet),
+                changePhone: {
+                    handler: this._changePhone,
+                    scope: this,
+                    before: [
+                        {
+                            handler: this._checkEnable,
+                            scope: this,
+                        },
+                    ],
+                },
+                resendSmsCode: {
+                    handler: this._resendSmsCode,
+                    scope: this,
+                    before: [
+                        {
+                            handler: this._checkEnable,
+                            scope: this,
+                        },
+                    ],
+                },
+                subscribeOnSmsGet: {
+                    handler: this._subscribeOnSmsGet,
+                    scope: this,
+                    before: [
+                        {
+                            handler: this._checkEnable,
+                            scope: this,
+                        },
+                    ],
+                },
 
                 // sms receiver api
-                incomingSms: checkEnable(this._incomingSms),
-                recentSmsList: checkEnable(this._recentSmsList),
+                incomingSms: {
+                    handler: this._incomingSms,
+                    scope: this,
+                    before: [
+                        {
+                            handler: this._checkEnable,
+                            scope: this,
+                        },
+                    ],
+                },
+                recentSmsList: {
+                    handler: this._recentSmsList,
+                    scope: this,
+                    before: [
+                        {
+                            handler: this._checkEnable,
+                            scope: this,
+                        },
+                    ],
+                },
 
                 // control api
-                getStrategyChoicer: this._getStrategyChoicer.bind(this),
-                setStrategyChoicer: this._setStrategyChoicer.bind(this),
-                enableRegistration: this._enableRegistrationByApi.bind(this),
-                disableRegistration: this._disableRegistrationByApi.bind(this),
-                isRegistrationEnabled: this._isRegistrationEnabledByApi.bind(this),
-                deleteAccount: this._deleteAccount.bind(this),
-                isRegistered: this.isRegistered.bind(this),
+                getStrategyChoicer: {
+                    handler: this._getStrategyChoicer,
+                    scope: this,
+                },
+                setStrategyChoicer: {
+                    handler: this._setStrategyChoicer,
+                    scope: this,
+                },
+                enableRegistration: {
+                    handler: this._enableRegistrationByApi,
+                    scope: this,
+                },
+                disableRegistration: {
+                    handler: this._disableRegistrationByApi,
+                    scope: this,
+                },
+                isRegistrationEnabled: {
+                    handler: this._isRegistrationEnabledByApi,
+                    scope: this,
+                },
+                deleteAccount: {
+                    handler: this._deleteAccount,
+                    scope: this,
+                },
+                isRegistered: {
+                    handler: this.isRegistered,
+                    scope: this,
+                },
             },
             requiredClients: {
                 facade: env.GLS_FACADE_CONNECT,
@@ -115,14 +283,12 @@ class Connector extends BasicConnector {
         return this._isEnabled;
     }
 
-    _checkEnable(handler) {
-        return async (...params) => {
-            if (this._isEnabled) {
-                return await handler.apply(this, params);
-            }
+    _checkEnable(params) {
+        if (this._isEnabled) {
+            return params;
+        }
 
-            throw { code: 423, message: 'Registration disabled' };
-        };
+        throw { code: 423, message: 'Registration disabled' };
     }
 
     async _getState({ user, phone }) {
@@ -377,6 +543,7 @@ class Connector extends BasicConnector {
     }
 
     async _isUserInBlockChain(user) {
+        // TODO: check if this works correctly
         try {
             await RPC.get_account(user);
             return true;
