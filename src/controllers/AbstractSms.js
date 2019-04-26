@@ -29,21 +29,25 @@ class AbstractSms extends Abstract {
         await model.save();
     }
 
-    async toBlockChain({ model, ...keys }) {
-        if (this._isActual(model)) {
-            if (model.registered) {
-                throw {
-                    code: 409,
-                    message: 'User already registered, just wait blockchain sync.',
-                };
-            }
-
-            if (!model.isPhoneVerified) {
-                return errors.E409.error;
-            }
-        } else {
+    async _canBeRegisteredOrThrow(model) {
+        if (!(await this._isActual(model))) {
             throw errors.E404.error;
         }
+
+        if (model.registered) {
+            throw {
+                code: 409,
+                message: 'User already registered, just wait blockchain sync.',
+            };
+        }
+
+        if (!model.isPhoneVerified) {
+            throw errors.E409.error;
+        }
+    }
+
+    async toBlockChain({ model, ...keys }) {
+        await this._canBeRegisteredOrThrow(model);
 
         const accountName = await this._generateNewUsername();
 
@@ -176,11 +180,7 @@ class AbstractSms extends Abstract {
             const code = errObject.code || 500;
             const message = errObject.message || 'Unhandled blockchain error';
 
-            throw {
-                code,
-                message,
-                error,
-            };
+            throw { code, message, error };
         }
     }
 }
