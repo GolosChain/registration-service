@@ -8,6 +8,10 @@ const env = require('../data/env');
 const User = require('../models/User');
 const LegacyUser = require('../models/LegacyUser');
 const States = require('../data/states');
+const randomstring = require('randomstring');
+const fetch = require('node-fetch');
+const { JsonRpc } = require('cyberwayjs');
+const RPC = new JsonRpc(env.GLS_CYBERWAY_CONNECT, { fetch });
 
 class AbstractSms extends Abstract {
     async changePhone({ model, phone }) {
@@ -25,21 +29,31 @@ class AbstractSms extends Abstract {
         await model.save();
     }
 
-    async toBlockChain({ model, ...keys }) {
-        if (this._isActual(model)) {
-            if (model.registered) {
-                throw { code: 409, message: 'User already registered, just wait blockchain sync.' };
-            }
-
-            if (!model.isPhoneVerified) {
-                return errors.E409.error;
-            }
-        } else {
+    async _canBeRegisteredOrThrow(model) {
+        if (!(await this._isActual(model))) {
             throw errors.E404.error;
         }
 
+        if (model.registered) {
+            throw {
+                code: 409,
+                message: 'User already registered, just wait blockchain sync.',
+            };
+        }
+
+        if (!model.isPhoneVerified) {
+            throw errors.E409.error;
+        }
+    }
+
+    async toBlockChain({ model, ...keys }) {
+        await this._canBeRegisteredOrThrow(model);
+
+        const accountName = await this._generateNewUsername();
+
         try {
-            await this._registerInBlockChain(model.user, { ...keys });
+            const username = model.user;
+            await this._registerInBlockChain(accountName, username, { ...keys });
         } catch (error) {
             Logger.error(`BlockChain registration error - ${error}`);
 
@@ -52,9 +66,15 @@ class AbstractSms extends Abstract {
         model.phone = PhoneUtils.maskBody(phone);
         model.phoneHash = PhoneUtils.saltedHash(phone);
         model.state = States.REGISTERED;
+        model.userId = accountName;
         await model.save();
 
         await this._sendFinishMail(model.mail, this._getLangBy(model.phone));
+
+        return {
+            userId: model.userId,
+            username: model.user,
+        };
     }
 
     _handleRecentModel(recentModel, phone) {
@@ -124,6 +144,44 @@ class AbstractSms extends Abstract {
         const expirationEdge = Moments.ago(expirationValue * 60 * 60 * 1000);
 
         return model.createdAt > expirationEdge;
+    }
+
+    async _generateNewUsername() {
+        const prefix = env.GLS_ACCOUNT_NAME_PREFIX;
+
+        const accountName =
+            prefix +
+            randomstring.generate({
+                length: 12 - prefix.length,
+                charset: 'alphanumeric',
+                capitalization: 'lowercase',
+            });
+
+        const occupied = await this._isUsernameOccupied(accountName);
+
+        if (occupied) {
+            return await this._generateNewUsername();
+        }
+
+        return accountName;
+    }
+
+    async _isUsernameOccupied(user) {
+        try {
+            await RPC.get_account(user);
+            return true;
+        } catch (error) {
+            const errObject = error.json || error;
+
+            if (errObject.code === 500) {
+                return false;
+            }
+
+            const code = errObject.code || 500;
+            const message = errObject.message || 'Unhandled blockchain error';
+
+            throw { code, message, error };
+        }
     }
 }
 
