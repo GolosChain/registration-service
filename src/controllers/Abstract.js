@@ -46,7 +46,27 @@ class Abstract extends BasicController {
     async _registerInBlockChain(name, alias, { owner, active }) {
         const transaction = this._generateRegisterTransaction(name, alias, { owner, active });
         const trx = await api.transact(transaction, transactionOptions);
-        return await api.pushSignedTransaction(trx);
+        const { transaction_id: transactionId } = await api.pushSignedTransaction(trx);
+        await this.waitForTransaction(transactionId);
+    }
+
+    async waitForTransaction(transactionId, retryNum = 0, maxRetries = 5) {
+        try {
+            return await this.callService('prism', 'waitForTransaction', {
+                transactionId,
+            });
+        } catch (error) {
+            if (
+                (error.code === 408 || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') &&
+                retryNum <= maxRetries
+            ) {
+                return await this.waitForTransaction(transactionId, retryNum++);
+            }
+
+            Logger.error(`Error calling prism.waitForTransaction`, JSON.stringify(error, null, 2));
+
+            throw error;
+        }
     }
 
     _generateRegisterTransaction(name, alias, { owner, active }) {
@@ -96,6 +116,7 @@ class Abstract extends BasicController {
 
         try {
             await this.sendTo('mail', 'send', {
+                //TODO: make more appropriate "from" field
                 from: 'no-reply@golos.io',
                 to: mail,
                 subject: locale.mail.subject[lang](),

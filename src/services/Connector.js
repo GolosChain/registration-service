@@ -235,6 +235,7 @@ class Connector extends BasicConnector {
                 facade: env.GLS_FACADE_CONNECT,
                 mail: env.GLS_MAIL_CONNECT,
                 sms: env.GLS_SMS_CONNECT,
+                prism: env.GLS_PRISM_CONNECT,
             },
         });
     }
@@ -542,8 +543,21 @@ class Connector extends BasicConnector {
         }
     }
 
+    async _resolveName(user) {
+        let name = user;
+        if (user && user.includes('@')) {
+            try {
+                const resolved = await RPC.fetch('/v1/chain/resolve_names', [user]);
+                name = resolved[0].resolved_username;
+            } catch (error) {
+                Logger.error('Error resolve account name -- ', error);
+            }
+        }
+        return name;
+    }
+
     async _isUserInBlockChain(user) {
-        // TODO: check if this works correctly
+        // TODO: use "resolve_names" method -> wait for blockchain
         try {
             await RPC.get_account(user);
             return true;

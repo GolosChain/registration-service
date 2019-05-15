@@ -24,6 +24,7 @@ module.exports = {
     GLS_ACCOUNT_NAME_PREFIX: env.GLS_ACCOUNT_NAME_PREFIX || '',
     GLS_CREATOR_NAME: env.GLS_CREATOR_NAME,
     GLS_CREATOR_KEY: env.GLS_CREATOR_KEY,
+    GLS_PRISM_CONNECT: env.GLS_PRISM_CONNECT,
 };
 
 if (module.exports.GLS_IS_REG_ENABLED_ON_START === 'true') {
