@@ -153,7 +153,7 @@ class AbstractSms extends Abstract {
             prefix +
             randomstring.generate({
                 length: 12 - prefix.length,
-                charset: 'alphanumeric',
+                charset: 'alphabetic',
                 capitalization: 'lowercase',
             });
 
