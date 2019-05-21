@@ -73,7 +73,7 @@ class Abstract extends BasicController {
         return {
             actions: [
                 {
-                    account: env.GLS_REGISTRAR_ACCOUNT,
+                    account: 'cyber',
                     name: 'newaccount',
                     authorization: [
                         {
