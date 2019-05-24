@@ -142,6 +142,9 @@ class Connector extends BasicConnector {
                             owner: {
                                 type: 'string',
                             },
+                            posting: {
+                                type: 'string',
+                            },
                         },
                         additionalProperties: true,
                     },

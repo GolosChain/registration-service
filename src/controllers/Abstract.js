@@ -43,8 +43,12 @@ class Abstract extends BasicController {
         return true;
     }
 
-    async _registerInBlockChain(name, alias, { owner, active }) {
-        const transaction = this._generateRegisterTransaction(name, alias, { owner, active });
+    async _registerInBlockChain(name, alias, { owner, active, posting }) {
+        const transaction = this._generateRegisterTransaction(name, alias, {
+            owner,
+            active,
+            posting,
+        });
         const trx = await api.transact(transaction, transactionOptions);
         const { transaction_id: transactionId } = await api.pushSignedTransaction(trx);
         await this.waitForTransaction(transactionId);
@@ -69,7 +73,7 @@ class Abstract extends BasicController {
         }
     }
 
-    _generateRegisterTransaction(name, alias, { owner, active }) {
+    _generateRegisterTransaction(name, alias, { owner, active, posting }) {
         return {
             actions: [
                 {
@@ -86,6 +90,7 @@ class Abstract extends BasicController {
                         name,
                         owner: this._generateAuthorityObject(owner),
                         active: this._generateAuthorityObject(active),
+                        posting: this._generateAuthorityObject(posting),
                     },
                 },
                 {
