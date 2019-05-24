@@ -618,10 +618,12 @@ class Connector extends BasicConnector {
         return testingPass === env.GLS_TESTING_PASS;
     }
 
-    async isRegistered(username) {
-        const user = await User.findOne({ user: username });
+    async isRegistered({ userId }) {
+        const userObject = await User.findOne({ userId });
 
-        return Boolean(user && user.registered);
+        console.log(userId, JSON.stringify(userObject, 4, null));
+
+        return { isRegistered: Boolean(userObject && userObject.registered) };
     }
 
     _normalizePhone(phone) {
