@@ -76,6 +76,9 @@ class Connector extends BasicConnector {
                             testingPass: {
                                 type: 'string',
                             },
+                            captcha: {
+                                type: 'string',
+                            },
                         },
                     },
                 },
