@@ -419,6 +419,13 @@ class Connector extends BasicConnector {
             };
         }
 
+        if (!(await this._isUsernameAllowed(user))) {
+            throw {
+                code: 400,
+                message: 'Name is already in use',
+            };
+        }
+
         const userModel = await this._getUserModelOrThrow({ phone });
 
         userModel.user = user;
@@ -549,17 +556,18 @@ class Connector extends BasicConnector {
         }
     }
 
-    async _resolveName(user) {
-        let name = user;
-        if (user && user.includes('@')) {
-            try {
-                const resolved = await RPC.fetch('/v1/chain/resolve_names', [user]);
-                name = resolved[0].resolved_username;
-            } catch (error) {
-                Logger.error('Error resolve account name -- ', error);
+    async _isUsernameAllowed(user) {
+        user += '@golos';
+        try {
+            await RPC.fetch('/v1/chain/resolve_names', [user]);
+        } catch (error) {
+            if (error.json && error.json.error && error.json.error.code === 3060007) {
+                return true;
             }
+            Logger.error('Error resolve names -- ', error);
+            throw error;
         }
-        return name;
+        return false;
     }
 
     async _isUserInBlockChain(user) {
