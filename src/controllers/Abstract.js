@@ -54,31 +54,35 @@ class Abstract extends BasicController {
         await this.waitForTransaction(transactionId);
     }
 
-    async waitForTransaction(transactionId, retryNum = 0, maxRetries = 1) {
-        try {
-            return await this.callService('prism', 'waitForTransaction', {
-                transactionId,
-            });
-        } catch (error) {
-            if (error.code !== 408 && error.code !== 'ECONNRESET' && error.code !== 'ETIMEDOUT') {
-                Logger.error(
-                    `Error calling prism.waitForTransaction`,
-                    JSON.stringify(error, null, 2)
-                );
-
-                throw error;
-            }
-
-            if (retryNum <= maxRetries) {
-                return await this.waitForTransaction(transactionId, retryNum++);
-            } else {
-                return await new Promise(resolve => {
-                    setTimeout(() => {
-                        resolve();
-                    }, 10000);
+    async waitForTransaction(transactionId, maxWait = 10000) {
+        const prismResponse = async () => {
+            try {
+                await this.callService('prism', 'waitForTransaction', {
+                    transactionId,
                 });
+            } catch (error) {
+                if (
+                    error.code !== 408 &&
+                    error.code !== 'ECONNRESET' &&
+                    error.code !== 'ETIMEDOUT'
+                ) {
+                    Logger.error(
+                        `Error calling prism.waitForTransaction`,
+                        JSON.stringify(error, null, 2)
+                    );
+
+                    throw error;
+                }
             }
-        }
+        };
+
+        const defaultTimeout = () => {
+            return new Promise(resolve => {
+                setTimeout(resolve, maxWait);
+            });
+        };
+
+        return Promise.race([defaultTimeout(), prismResponse()]);
     }
 
     _generateRegisterTransaction(name, alias, { owner, active, posting }) {
