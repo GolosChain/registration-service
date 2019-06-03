@@ -66,10 +66,7 @@ class Abstract extends BasicController {
                     error.code !== 'ECONNRESET' &&
                     error.code !== 'ETIMEDOUT'
                 ) {
-                    Logger.error(
-                        `Error calling prism.waitForTransaction`,
-                        JSON.stringify(error, null, 2)
-                    );
+                    Logger.error(`Error calling prism.waitForTransaction`, error);
 
                     throw error;
                 }
