@@ -54,22 +54,30 @@ class Abstract extends BasicController {
         await this.waitForTransaction(transactionId);
     }
 
-    async waitForTransaction(transactionId, retryNum = 0, maxRetries = 5) {
+    async waitForTransaction(transactionId, retryNum = 0, maxRetries = 1) {
         try {
             return await this.callService('prism', 'waitForTransaction', {
                 transactionId,
             });
         } catch (error) {
-            if (
-                (error.code === 408 || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') &&
-                retryNum <= maxRetries
-            ) {
-                return await this.waitForTransaction(transactionId, retryNum++);
+            if (error.code !== 408 && error.code !== 'ECONNRESET' && error.code !== 'ETIMEDOUT') {
+                Logger.error(
+                    `Error calling prism.waitForTransaction`,
+                    JSON.stringify(error, null, 2)
+                );
+
+                throw error;
             }
 
-            Logger.error(`Error calling prism.waitForTransaction`, JSON.stringify(error, null, 2));
-
-            throw error;
+            if (retryNum <= maxRetries) {
+                return await this.waitForTransaction(transactionId, retryNum++);
+            } else {
+                return await new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve();
+                    }, 10000);
+                });
+            }
         }
     }
 
