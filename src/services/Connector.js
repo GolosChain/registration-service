@@ -301,7 +301,7 @@ class Connector extends BasicConnector {
     async _getState({ user, phone }) {
         const timer = Date.now();
 
-        if (await this._isUserInBlockChain(user)) {
+        if (user && (await this._isUserInBlockChain(user))) {
             return { currentState: 'registered' };
         }
 
