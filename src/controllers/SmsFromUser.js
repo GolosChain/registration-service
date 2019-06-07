@@ -1,6 +1,6 @@
 const core = require('gls-core-service');
 require('../utils/Errors');
-const stats = core.utils.statsClient;
+const metrics = core.utils.metrics;
 const Logger = core.utils.Logger;
 const locale = require('../data/locale');
 const AbstractSms = require('./AbstractSms');
@@ -42,7 +42,7 @@ class SmsFromUser extends AbstractSms {
     }
 
     async handleIncomingSms({ phone }) {
-        const timer = Date.now();
+        const end = metrics.startTimer('sms_from_user_verify');
         const model = await User.findOne(
             { strategy: 'smsFromUser', phone },
             {},
@@ -69,7 +69,7 @@ class SmsFromUser extends AbstractSms {
             // do nothing, notify late
         }
 
-        stats.timing('sms_from_user_verify', Date.now() - timer);
+        end();
     }
 
     async handleRecentSmsList({ list }) {

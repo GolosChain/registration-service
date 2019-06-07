@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const core = require('gls-core-service');
-const stats = core.utils.statsClient;
 const BasicMain = core.services.BasicMain;
 const MongoDB = core.services.MongoDB;
 const Logger = core.utils.Logger;
@@ -11,7 +10,7 @@ const LegacyUser = require('./models/LegacyUser');
 
 class Main extends BasicMain {
     constructor() {
-        super(stats, env);
+        super(env);
 
         const connector = new Connector();
         this._mongoDb = new MongoDB();
