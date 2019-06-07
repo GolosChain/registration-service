@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 const core = require('gls-core-service');
 const { JsonRpc } = require('cyberwayjs');
 const BasicConnector = core.services.Connector;
-const stats = core.utils.statsClient;
+const metrics = core.utils.metrics;
 const Logger = core.utils.Logger;
 const errors = require('../utils/Errors');
 const env = require('../data/env');
@@ -299,7 +299,7 @@ class Connector extends BasicConnector {
     }
 
     async _getState({ user, phone }) {
-        const timer = Date.now();
+        const end = metrics.startTimer('registration_get_state');
 
         if (user && (await this._isUserInBlockChain(user))) {
             return { currentState: 'registered' };
@@ -314,7 +314,7 @@ class Connector extends BasicConnector {
             return { currentState: 'firstStep' };
         }
 
-        stats.timing('registration_get_state', Date.now() - timer);
+        end();
         return { currentState: recentModel.state, user: recentModel.user };
     }
 
@@ -323,7 +323,7 @@ class Connector extends BasicConnector {
             throw { code: 400, message: 'Invalid params' };
         }
 
-        const timer = Date.now();
+        const end = metrics.startTimer('registration_first_step');
 
         phone = this._normalizePhone(phone);
 
@@ -348,7 +348,7 @@ class Connector extends BasicConnector {
 
         const result = await handler.firstStep({ user, phone, mail, isTestingSystem }, recentModel);
 
-        stats.timing('registration_first_step', Date.now() - timer);
+        end();
         return result;
     }
 
@@ -368,7 +368,7 @@ class Connector extends BasicConnector {
             result = JSON.parse(rawResult);
         } catch (error) {
             Logger.error('Google invalid response');
-            stats.increment('google_invalid_response');
+            metrics.inc('google_invalid_response');
             throw error.E500.error;
         }
 
@@ -382,7 +382,7 @@ class Connector extends BasicConnector {
     }
 
     async _verify({ user, phone, ...data }) {
-        const timer = Date.now();
+        const end = metrics.startTimer('registration_verify');
 
         const { currentState } = await this._getState({ user, phone });
         if (currentState !== 'verify') {
@@ -396,7 +396,7 @@ class Connector extends BasicConnector {
         const model = await this._getUserModelOrThrow({ user, phone });
         const result = await this._controllers[model.strategy].verify({ model, phone, ...data });
 
-        stats.timing('registration_verify', Date.now() - timer);
+        end();
         return result;
     }
 
@@ -441,7 +441,7 @@ class Connector extends BasicConnector {
                 message: 'User is a required parameter',
             };
         }
-        const timer = Date.now();
+        const end = metrics.startTimer('registration_to_blockchain');
 
         const { currentState } = await this._getState({ user });
         if (currentState !== 'toBlockChain') {
@@ -455,12 +455,12 @@ class Connector extends BasicConnector {
         const model = await this._getUserModelOrThrow({ user });
         const result = await this._controllers[model.strategy].toBlockChain({ model, ...keys });
 
-        stats.timing('registration_to_blockchain', Date.now() - timer);
+        end();
         return result;
     }
 
     async _changePhone({ user, phone, captcha = null, testingPass = null }) {
-        const timer = Date.now();
+        const end = metrics.startTimer('registration_change_phone');
 
         await this._throwIfUserInBlockChain(user);
 
@@ -478,12 +478,12 @@ class Connector extends BasicConnector {
 
         const result = this._controllers[model.strategy].changePhone({ model, phone });
 
-        stats.timing('registration_change_phone', Date.now() - timer);
+        end();
         return result;
     }
 
     async _resendSmsCode({ user, phone }) {
-        const timer = Date.now();
+        const end = metrics.startTimer('registration_resend_sms_code');
 
         if (user) {
             await this._throwIfUserInBlockChain(user);
@@ -495,12 +495,12 @@ class Connector extends BasicConnector {
 
         const result = this._controllers[model.strategy].resendSmsCode({ model, phone });
 
-        stats.timing('registration_resend_sms_code', Date.now() - timer);
+        end();
         return result;
     }
 
     async _subscribeOnSmsGet({ user, phone, channelId }) {
-        const timer = Date.now();
+        const end = metrics.startTimer('registration_subscribe_on_sms_get');
 
         await this._throwIfUserInBlockChain(user);
 
@@ -511,7 +511,7 @@ class Connector extends BasicConnector {
         const target = this._controllers[model.strategy];
         const result = target.subscribeOnSmsGet({ user, phone, channelId });
 
-        stats.timing('registration_subscribe_on_sms_get', Date.now() - timer);
+        end();
         return result;
     }
 
