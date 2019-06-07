@@ -54,32 +54,31 @@ class Abstract extends BasicController {
         await this.waitForTransaction(transactionId);
     }
 
-    async waitForTransaction(transactionId, maxWait = 10000) {
-        const prismResponse = async () => {
-            try {
-                await this.callService('prism', 'waitForTransaction', {
-                    transactionId,
-                });
-            } catch (error) {
-                if (
-                    error.code !== 408 &&
-                    error.code !== 'ECONNRESET' &&
-                    error.code !== 'ETIMEDOUT'
-                ) {
-                    Logger.error(`Error calling prism.waitForTransaction`, error);
-
-                    throw error;
-                }
-            }
-        };
-
-        const defaultTimeout = () => {
-            return new Promise(resolve => {
-                setTimeout(resolve, maxWait);
+    async _callPrismWaitForTransaction(transactionId) {
+        try {
+            await this.callService('prism', 'waitForTransaction', {
+                transactionId,
             });
-        };
+        } catch (error) {
+            if (error.code !== 408 && error.code !== 'ECONNRESET' && error.code !== 'ETIMEDOUT') {
+                Logger.error(`Error calling prism.waitForTransaction`, error);
 
-        return Promise.race([defaultTimeout(), prismResponse()]);
+                throw error;
+            }
+        }
+    }
+
+    _defaultTimeout(maxWait) {
+        return new Promise(resolve => {
+            setTimeout(resolve, maxWait);
+        });
+    }
+
+    async waitForTransaction(transactionId, maxWait = 10000) {
+        return Promise.race([
+            this._defaultTimeout(maxWait),
+            this._callPrismWaitForTransaction(transactionId),
+        ]);
     }
 
     _generateRegisterTransaction(name, alias, { owner, active, posting }) {
