@@ -7,6 +7,7 @@ const { JsonRpc, Api } = require('cyberwayjs');
 const JsSignatureProvider = require('cyberwayjs/dist/eosjs-jssig').default;
 const fetch = require('node-fetch');
 const { TextEncoder, TextDecoder } = require('text-encoding');
+const sleep = require('then-sleep');
 
 const rpc = new JsonRpc(env.GLS_CYBERWAY_CONNECT, { fetch });
 const signatureProvider = new JsSignatureProvider([env.GLS_REGISTRAR_KEY, env.GLS_CREATOR_KEY]);
@@ -54,23 +55,22 @@ class Abstract extends BasicController {
         await this.waitForTransaction(transactionId);
     }
 
-    async waitForTransaction(transactionId, retryNum = 0, maxRetries = 5) {
+    async _callPrismWaitForTransaction(transactionId) {
         try {
-            return await this.callService('prism', 'waitForTransaction', {
+            await this.callService('prism', 'waitForTransaction', {
                 transactionId,
             });
         } catch (error) {
-            if (
-                (error.code === 408 || error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') &&
-                retryNum <= maxRetries
-            ) {
-                return await this.waitForTransaction(transactionId, retryNum++);
+            if (error.code !== 408 && error.code !== 'ECONNRESET' && error.code !== 'ETIMEDOUT') {
+                Logger.error(`Error calling prism.waitForTransaction`, error);
+
+                throw error;
             }
-
-            Logger.error(`Error calling prism.waitForTransaction`, JSON.stringify(error, null, 2));
-
-            throw error;
         }
+    }
+
+    async waitForTransaction(transactionId, maxWait = 10000) {
+        return Promise.race([sleep(maxWait), this._callPrismWaitForTransaction(transactionId)]);
     }
 
     _generateRegisterTransaction(name, alias, { owner, active, posting }) {
