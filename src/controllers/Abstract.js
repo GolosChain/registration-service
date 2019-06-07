@@ -7,6 +7,7 @@ const { JsonRpc, Api } = require('cyberwayjs');
 const JsSignatureProvider = require('cyberwayjs/dist/eosjs-jssig').default;
 const fetch = require('node-fetch');
 const { TextEncoder, TextDecoder } = require('text-encoding');
+const sleep = require('then-sleep');
 
 const rpc = new JsonRpc(env.GLS_CYBERWAY_CONNECT, { fetch });
 const signatureProvider = new JsSignatureProvider([env.GLS_REGISTRAR_KEY, env.GLS_CREATOR_KEY]);
@@ -68,17 +69,8 @@ class Abstract extends BasicController {
         }
     }
 
-    _defaultTimeout(maxWait) {
-        return new Promise(resolve => {
-            setTimeout(resolve, maxWait);
-        });
-    }
-
     async waitForTransaction(transactionId, maxWait = 10000) {
-        return Promise.race([
-            this._defaultTimeout(maxWait),
-            this._callPrismWaitForTransaction(transactionId),
-        ]);
+        return Promise.race([sleep(maxWait), this._callPrismWaitForTransaction(transactionId)]);
     }
 
     _generateRegisterTransaction(name, alias, { owner, active, posting }) {
