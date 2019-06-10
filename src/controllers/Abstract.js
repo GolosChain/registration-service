@@ -99,7 +99,7 @@ class Abstract extends BasicController {
                     authorization: [
                         {
                             actor: env.GLS_CREATOR_NAME,
-                            permission: 'active',
+                            permission: 'createuser',
                         },
                     ],
                     data: {
