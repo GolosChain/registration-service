@@ -13,6 +13,7 @@ services:
       - registration_mongodb_vol:/data/db
     ports:
       - $GLS_MONGO_EXTERNAL_HOST:$GLS_MONGO_EXTERNAL_PORT:27017
+      - $GLS_METRICS_HOST:$GLS_METRICS_PORT:$GLS_METRICS_PORT
     networks:
       - services-tier
 
