@@ -82,7 +82,7 @@ class Abstract extends BasicController {
                     authorization: [
                         {
                             actor: env.GLS_REGISTRAR_ACCOUNT,
-                            permission: 'createuser',
+                            permission: 'active',
                         },
                     ],
                     data: {
@@ -106,21 +106,6 @@ class Abstract extends BasicController {
                         creator: env.GLS_CREATOR_NAME,
                         name: alias,
                         owner: name,
-                    },
-                },
-                {
-                    account: 'gls.vesting',
-                    name: 'open',
-                    authorization: [
-                        {
-                            actor: env.GLS_CREATOR_NAME,
-                            permission: 'active',
-                        },
-                    ],
-                    data: {
-                        symbol: '6,GOLOS',
-                        owner: name,
-                        ram_payer: env.GLS_CREATOR_NAME,
                     },
                 },
             ],
