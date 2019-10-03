@@ -137,12 +137,14 @@ class SmsToUser extends AbstractSms {
             throw errors.E409.error;
         }
 
+        const nextSmsRetry = this._getSmsRetryState(model);
+
         if (Date.now() - model.smsCodeDate < env.GLS_SMS_RESEND_CODE_TIMEOUT) {
-            throw { code: 429, message: 'Try later.' };
+            throw { code: 429, message: 'Try later.', data: { nextSmsRetry } };
         }
 
         if (model.smsCodeResendCount > env.GLS_SMS_RESEND_CODE_MAX) {
-            throw { code: 429, message: 'Too many retries.' };
+            throw { code: 429, message: 'Too many retries.', data: { nextSmsRetry } };
         }
 
         model.smsCodeResendCount += 1;
@@ -156,7 +158,7 @@ class SmsToUser extends AbstractSms {
             code = await this._makeAndApplyTestingSmsCode(model);
         }
 
-        return { nextSmsRetry: this._getSmsRetryState(model), code };
+        return { nextSmsRetry, code };
     }
 
     _calcNextSmsRetry(model = null) {
