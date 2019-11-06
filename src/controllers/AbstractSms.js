@@ -128,8 +128,11 @@ class AbstractSms extends Abstract {
 
     _getLangBy(phone) {
         switch (true) {
-            case /^\+7|^\+380/.test(phone):
+            case /^\+7/.test(phone):
                 return 'ru';
+
+            case /^\+380/.test(phone):
+                return 'ua';
 
             case /^\+375/.test(phone):
                 return 'by';
