@@ -94,6 +94,21 @@ class Abstract extends BasicController {
                     },
                 },
                 {
+                    account: 'cyber.token',
+                    name: 'open',
+                    authorization: [
+                        {
+                            actor: env.GLS_REGISTRAR_ACCOUNT,
+                            permission: 'active',
+                        },
+                    ],
+                    data: {
+                        ram_payer: env.GLS_REGISTRAR_ACCOUNT,
+                        symbol: '3,GOLOS',
+                        owner: name,
+                    },
+                },
+                {
                     account: 'cyber.domain',
                     name: 'newusername',
                     authorization: [
